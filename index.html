@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>💅 Mon Atelier Nail Art 🎀</title>
 
 <!-- ===== PWA / Add to Home Screen ===== -->
@@ -178,10 +178,37 @@
   /* Petite pastille cœur brisé (péremption) */
   .pulse-alert{ animation:pulseAlert 1.4s infinite; }
   @keyframes pulseAlert{ 0%,100%{opacity:1;} 50%{opacity:.45;} }
+
+  /* ============================================================
+     RAFFINEMENTS DESIGN
+     ============================================================ */
+  /* Couche décorative flottante en fond (nœuds, cœurs, étincelles) */
+  #deco{ position:fixed; inset:0; overflow:hidden; pointer-events:none; z-index:0; }
+  #deco span{ position:absolute; opacity:.12; will-change:transform; animation:floaty 11s ease-in-out infinite; }
+  @keyframes floaty{ 0%,100%{ transform:translateY(0) rotate(-6deg); } 50%{ transform:translateY(-22px) rotate(10deg); } }
+  #app{ position:relative; z-index:1; }               /* le contenu passe au-dessus du décor */
+
+  /* Cartes & boutons : reflet subtil sans gêner le texte */
+  .card{ box-shadow:0 10px 26px var(--shadow-rose), inset 0 1px 0 rgba(255,255,255,.85); }
+  .btn-primary{ box-shadow:0 6px 16px var(--shadow-rose), inset 0 1px 0 rgba(255,255,255,.32); }
+  .btn-primary:active{ box-shadow:0 3px 10px var(--shadow-rose); }
+  .chip{ box-shadow:0 2px 6px rgba(255,126,185,.10); }
+
+  /* Nav : halo doux sous l'icône active + en-tête souligné finement */
+  .nav-btn.active i{ filter: drop-shadow(0 3px 6px var(--shadow-rose)); }
+  header{ border-bottom:1px solid rgba(255,126,185,.18); }
+
+  /* Respect des personnes qui réduisent les animations */
+  @media (prefers-reduced-motion: reduce){
+    #deco span, .heartbeat, .holo, .sparkle{ animation:none !important; }
+  }
 </style>
 </head>
 
 <body data-theme="studio">
+
+<!-- ================= DÉCOR FLOTTANT (fond) ================= -->
+<div id="deco" aria-hidden="true"></div>
 
 <!-- ================= EN-TÊTE ================= -->
 <header class="sticky top-0 z-40 px-4 pt-3 pb-2" style="backdrop-filter:blur(10px); background:rgba(255,245,248,.7);">
@@ -297,10 +324,36 @@ function load(){
 }
 function save(fromSync){
   if(!fromSync) DB._localTs = Date.now();       // horodate la modif locale
-  try{ localStorage.setItem(DB_KEY, JSON.stringify(DB)); }catch(e){ toast('⚠️ Sauvegarde impossible'); }
-  if(!fromSync) scheduleCloudPush();            // puis on envoie au cloud (différé)
+  let ok = true;
+  try{ localStorage.setItem(DB_KEY, JSON.stringify(DB)); }
+  catch(e){ ok = false; toast('⚠️ Mémoire pleine — retire ou réduis quelques photos 🥺'); }
+  if(!fromSync && ok) scheduleCloudPush();       // puis on envoie au cloud (différé)
+  return ok;
 }
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+
+/* ---------- Petits utilitaires sûrs ---------- */
+// Échappe le texte réinjecté dans le HTML/attributs (marque, réf, titre, code…).
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+// Réduit une image (dataURL) avant stockage pour ne pas saturer le LocalStorage.
+function downscaleImage(dataUrl, maxDim=1100, quality=0.72){
+  return new Promise((resolve)=>{
+    try{
+      const img = new Image();
+      img.onload = ()=>{
+        try{
+          let w = img.width, h = img.height;
+          if(Math.max(w,h) > maxDim){ const r = maxDim/Math.max(w,h); w = Math.round(w*r); h = Math.round(h*r); }
+          const c = document.createElement('canvas'); c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img,0,0,w,h);
+          resolve(c.toDataURL('image/jpeg', quality));
+        }catch(e){ resolve(dataUrl); }
+      };
+      img.onerror = ()=>resolve(dataUrl);
+      img.src = dataUrl;
+    }catch(e){ resolve(dataUrl); }
+  });
+}
 
 /* ---------- 2. DICTIONNAIRE DE COULEURS (marque/réf -> HEX) ---------- */
 /* Correspondances approximatives des teintes populaires. La pipette photo complète le reste. */
@@ -314,10 +367,16 @@ const COLOR_DICT = {
   'kiara sky milk':'#FBEDE8', 'peggy sage nude':'#E6C6BE'
 };
 function guessHex(brand, ref){
-  const key = (brand+' '+ref).toLowerCase().trim().replace(/#/g,'').replace(/\s+/g,' ');
+  const norm = s => String(s||'').toLowerCase().replace(/#/g,'').replace(/\s+/g,' ').trim();
+  const key = norm(brand+' '+ref);
   if(COLOR_DICT[key]) return COLOR_DICT[key];
-  // recherche partielle
-  for(const k in COLOR_DICT){ if(k && key.includes(k.split(' ').pop())) return COLOR_DICT[k]; }
+  // Recherche partielle PRUDENTE : la marque doit correspondre ET la référence figurer
+  // dans la clé (évite qu'un simple « red » ou « 002 » renvoie une teinte d'une autre marque).
+  const b = norm(brand);
+  for(const k in COLOR_DICT){
+    const parts = k.split(' '); const kb = parts[0]; const kref = parts.slice(1).join(' ');
+    if(b && kb && (b.includes(kb) || kb.includes(b)) && kref && key.includes(kref)) return COLOR_DICT[k];
+  }
   return null;
 }
 
@@ -380,27 +439,29 @@ function extractPalette(dataUrl, n=5){
   return new Promise((resolve)=>{
     const img = new Image();
     img.onload = ()=>{
-      const c = document.createElement('canvas');
-      const w = c.width = 60, h = c.height = 60;
-      const ctx = c.getContext('2d');
-      ctx.drawImage(img,0,0,w,h);
-      const data = ctx.getImageData(0,0,w,h).data;
-      const buckets = {};
-      for(let i=0;i<data.length;i+=4){
-        const a = data[i+3]; if(a<125) continue;
-        // regroupe par pas de 32 pour créer des familles de couleurs
-        const r = Math.round(data[i]/32)*32;
-        const g = Math.round(data[i+1]/32)*32;
-        const b = Math.round(data[i+2]/32)*32;
-        const key = r+','+g+','+b;
-        buckets[key] = (buckets[key]||0)+1;
-      }
-      const sorted = Object.entries(buckets).sort((a,b)=>b[1]-a[1]).slice(0,n);
-      const hexes = sorted.map(([k])=>{
-        const [r,g,b]=k.split(',').map(Number);
-        return '#'+[r,g,b].map(x=>Math.min(255,x).toString(16).padStart(2,'0')).join('');
-      });
-      resolve(hexes.length?hexes:['#FF7EB9']);
+      try{
+        const c = document.createElement('canvas');
+        const w = c.width = 60, h = c.height = 60;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img,0,0,w,h);
+        const data = ctx.getImageData(0,0,w,h).data;
+        const buckets = {};
+        for(let i=0;i<data.length;i+=4){
+          const a = data[i+3]; if(a<125) continue;
+          // regroupe par pas de 32 pour créer des familles de couleurs
+          const r = Math.round(data[i]/32)*32;
+          const g = Math.round(data[i+1]/32)*32;
+          const b = Math.round(data[i+2]/32)*32;
+          const key = r+','+g+','+b;
+          buckets[key] = (buckets[key]||0)+1;
+        }
+        const sorted = Object.entries(buckets).sort((a,b)=>b[1]-a[1]).slice(0,n);
+        const hexes = sorted.map(([k])=>{
+          const [r,g,b]=k.split(',').map(Number);
+          return '#'+[r,g,b].map(x=>Math.min(255,x).toString(16).padStart(2,'0')).join('');
+        });
+        resolve(hexes.length?hexes:['#FF7EB9']);
+      }catch(e){ resolve(['#FF7EB9']); }   // canvas « tainted » ou lecture impossible
     };
     img.onerror = ()=>resolve(['#FF7EB9']);
     img.src = dataUrl;
@@ -429,7 +490,8 @@ function monthsSince(dateStr){
   if(!dateStr) return null;
   const d = new Date(dateStr); if(isNaN(d)) return null;
   const now = new Date();
-  return (now.getFullYear()-d.getFullYear())*12 + (now.getMonth()-d.getMonth());
+  const m = (now.getFullYear()-d.getFullYear())*12 + (now.getMonth()-d.getMonth());
+  return Math.max(0, m);   // une date d'ouverture future ne donne pas de mois négatif
 }
 function peremptionInfo(gel){
   const m = monthsSince(gel.openDate);
@@ -452,6 +514,7 @@ const TABS = {
 };
 let currentTab = 'studio';
 function switchTab(tab){
+  if(typeof stopTimer === 'function') stopTimer();   // coupe le chrono UV en quittant l'onglet
   currentTab = tab;
   document.body.dataset.theme = tab;
   document.getElementById('header-emoji').textContent = TABS[tab].emoji;
@@ -603,10 +666,14 @@ function setPose(key,val){ DB.pose[key]=val; save(); renderTab(); }
 function setFinish(v){ DB.pose.finish=v; save(); renderTab(); }
 function toggleNonDom(v){
   DB.pose.mainNonDom = v;
-  if(v){ // simplifie : une seule couleur d'accent, reste nude
+  if(v){ // simplifie : une seule couleur d'accent, reste nude — on sauvegarde l'ancienne palette
+    DB.pose._nailsBackup = [...DB.pose.nails];
     const accent = DB.pose.nails[2];
     DB.pose.nails = DB.pose.nails.map((c,i)=> i===3?accent:'#FFE3EF');
     toast('🤲 Design simplifié pour la main opposée');
+  } else if(DB.pose._nailsBackup){ // on décoche → on restaure les couleurs d'origine
+    DB.pose.nails = DB.pose._nailsBackup;
+    delete DB.pose._nailsBackup;
   }
   save(); renderTab();
 }
@@ -686,7 +753,7 @@ function gelCard(g){
   return `<div class="card p-3 mb-3 flex items-center gap-3">
     <span class="w-14 h-14 rounded-2xl border-2 border-white shadow flex-shrink-0" style="background:${g.hex||'#eee'}"></span>
     <div class="flex-1 min-w-0">
-      <div class="font-cute font-bold truncate" style="color:var(--accent-d)">${g.brand} ${g.ref||''}</div>
+      <div class="font-cute font-bold truncate" style="color:var(--accent-d)">${esc(g.brand)} ${esc(g.ref||'')}</div>
       <div class="flex flex-wrap gap-1 mt-1">
         <span class="badge-pastel">${FINISH_EMOJI[g.finish]||''} ${g.finish}</span>
         <span class="badge-pastel">${g.hex||'—'}</span>
@@ -707,8 +774,8 @@ function gelForm(id){
       <button onclick="closeModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
     </div>
     <div class="space-y-3">
-      <div><label>Marque</label><input id="gf-brand" value="${g.brand||''}" placeholder="Victoria Vynn, DND, OPI…"></div>
-      <div><label>Référence</label><input id="gf-ref" value="${g.ref||''}" placeholder="#042, 450…"></div>
+      <div><label>Marque</label><input id="gf-brand" value="${esc(g.brand||'')}" placeholder="Victoria Vynn, DND, OPI…"></div>
+      <div><label>Référence</label><input id="gf-ref" value="${esc(g.ref||'')}" placeholder="#042, 450…"></div>
       <div>
         <label>Couleur (auto depuis marque+réf, ou pipette / choix manuel)</label>
         <div class="flex gap-2 items-center">
@@ -768,7 +835,8 @@ function saveGel(id){
     openDate: document.getElementById('gf-date').value
   };
   if(id){ const i=DB.gels.findIndex(x=>x.id===id); DB.gels[i]=gel; } else DB.gels.push(gel);
-  save(); closeModal(); pinkConfetti(); toast('💅 Gel enregistré !'); renderStock();
+  if(!save()) return;   // si la mémoire est pleine, on n'affiche pas un faux « enregistré »
+  closeModal(); pinkConfetti(); toast('💅 Gel enregistré !'); renderStock();
 }
 function delGel(id){ if(confirm('Supprimer ce gel ?')){ DB.gels=DB.gels.filter(g=>g.id!==id); save(); renderStock(); } }
 
@@ -784,8 +852,8 @@ function renderDecors(){
         <div class="card p-3 relative">
           <button onclick="delDecor('${d.id}')" class="absolute top-2 right-2 text-red-300"><i data-lucide="x" class="w-4 h-4"></i></button>
           <div class="text-2xl">${({'Strass':'💎','Paillettes':'✨','Poudre chromée':'🪞','Foils':'🌈','Gel 3D':'🧁','Stickers':'🎀'})[d.type]||'💖'}</div>
-          <div class="font-cute font-bold text-sm mt-1" style="color:var(--accent-d)">${d.name}</div>
-          <span class="badge-pastel mt-1 inline-block">${d.type}${d.qty?' · '+d.qty:''}</span>
+          <div class="font-cute font-bold text-sm mt-1" style="color:var(--accent-d)">${esc(d.name)}</div>
+          <span class="badge-pastel mt-1 inline-block">${d.type}${d.qty?' · '+esc(d.qty):''}</span>
         </div>`).join('') : `<div class="col-span-2">${emptyState('✨','Aucun décor','Strass, paillettes, foils…')}</div>`}
     </div>
     <div class="card p-4">
@@ -817,7 +885,8 @@ function decorForm(){
 function saveDecor(){
   const name = document.getElementById('df-name').value.trim(); if(!name) return toast('Donne un nom 💕');
   DB.decors.push({ id:uid(), name, type:document.getElementById('df-type').value, qty:document.getElementById('df-qty').value.trim() });
-  save(); closeModal(); pinkConfetti(); renderStock();
+  if(!save()) return;
+  closeModal(); pinkConfetti(); renderStock();
 }
 function delDecor(id){ DB.decors=DB.decors.filter(d=>d.id!==id); save(); renderStock(); }
 
@@ -868,8 +937,9 @@ function renderScan(){
   lucide.createIcons();
 }
 async function scanImage(e){
-  const url = await readImage(e.target.files[0]).catch(()=>null); if(!url) return;
+  const raw = await readImage(e.target.files[0]).catch(()=>null); if(!raw) return;
   toast('🔮 Analyse en cours…');
+  const url = await downscaleImage(raw, 1000, 0.7);   // photo allégée avant analyse + stockage
   const palette = await extractPalette(url);
   showScanResult({ img:url, palette });
 }
@@ -881,8 +951,10 @@ function scanUrl(){
   const trend = [['#F7D9D3','#E8B4B8','#C86B7A','#7B1E3B'],['#FCE1FF','#FF9EC8','#FF3E9A','#C94FE0'],['#E8F0FF','#D6C7FF','#B6D9FF','#FFFFFF']][Math.floor(Math.random()*3)];
   showScanResult({ url, palette:trend, note:'🔗 Astuce : importe une capture d\'écran du lien pour une analyse exacte des couleurs.' });
 }
+let lastScan = null;   // dernier résultat d'analyse (évite d'injecter une énorme dataURL dans un onclick)
 function showScanResult(data){
   const style = detectStyle(data.palette);
+  lastScan = { data, style };
   const box = document.getElementById('scan-result');
   const matches = data.palette.map(hex=>({ hex, gels:closestGels(hex,1) }));
   box.innerHTML = `
@@ -900,16 +972,19 @@ function showScanResult(data){
           <span class="w-6 h-6 rounded-full border-2 border-white shadow" style="background:${m.hex}"></span>
           <i data-lucide="arrow-right" class="w-3 h-3 text-pink-300"></i>
           ${m.gels.length?`<span class="w-6 h-6 rounded-full border-2 border-white shadow" style="background:${m.gels[0].hex}"></span>
-            <b style="color:var(--accent-d)">${m.gels[0].brand} ${m.gels[0].ref||''}</b>`:'<span class="text-gray-400">Aucun gel proche dans le stock 🥺</span>'}
+            <b style="color:var(--accent-d)">${esc(m.gels[0].brand)} ${esc(m.gels[0].ref||'')}</b>`:'<span class="text-gray-400">Aucun gel proche dans le stock 🥺</span>'}
         </div>`).join('')}
       </div>
-      <button onclick='saveInspi(${JSON.stringify(data).replace(/'/g,"&#39;")}, "${style}")' class="btn-primary w-full py-2.5 mt-3 text-sm">💾 Sauver cette inspi</button>
+      <button onclick="saveInspi()" class="btn-primary w-full py-2.5 mt-3 text-sm">💾 Sauver cette inspi</button>
     </div>`;
   lucide.createIcons(); pinkConfetti();
 }
-function saveInspi(data, style){
+function saveInspi(){
+  if(!lastScan) return;
+  const { data, style } = lastScan;
   DB.inspirations.unshift({ id:uid(), img:data.img||null, url:data.url||null, palette:data.palette, style, date:new Date().toISOString() });
-  save(); toast('💾 Inspiration sauvée !'); renderSavedInspi();
+  if(!save()) return;   // mémoire pleine → pas de faux « sauvé »
+  toast('💾 Inspiration sauvée !'); renderSavedInspi();
 }
 function renderSavedInspi(){
   const box = document.getElementById('scan-saved'); if(!box) return;
@@ -929,11 +1004,14 @@ function delInspi(id){ DB.inspirations=DB.inspirations.filter(x=>x.id!==id); sav
 function renderCarnet(){
   const app = document.getElementById('app');
   // Prochain remplissage : à partir de la dernière pose (J+21)
+  // On lit les dates en LOCAL (pas UTC) pour éviter un décalage d'un jour selon le fuseau.
+  const parseLocal = s=>{ const [y,m,dd]=String(s||'').split('-').map(Number); return new Date(y||1970,(m||1)-1,dd||1); };
   let nextFill = '';
   if(DB.carnet.length){
-    const last = [...DB.carnet].sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
-    const d = new Date(last.date); d.setDate(d.getDate()+21);
-    const days = Math.ceil((d-new Date())/86400000);
+    const last = [...DB.carnet].sort((a,b)=>parseLocal(b.date)-parseLocal(a.date))[0];
+    const d = parseLocal(last.date); d.setDate(d.getDate()+21);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const days = Math.round((d-today)/86400000);
     nextFill = `<div class="card-heart-border bg-white/70 rounded-2xl p-3 mb-4 flex items-center gap-3">
       <span class="text-2xl">🗓️</span>
       <div class="text-sm">
@@ -954,10 +1032,10 @@ function carnetCard(c){
     ${c.photo?`<img src="${c.photo}" class="w-full h-32 object-cover rounded-sm">`:`<div class="w-full h-32 rounded-sm flex items-center justify-center text-4xl" style="background:linear-gradient(135deg,#FFE3F1,#FFD1E8)">💅</div>`}
     <div class="absolute" style="top:6px;right:8px">💕</div>
     <div class="mt-1 px-0.5">
-      <div class="font-script text-lg leading-tight" style="color:var(--accent-d)">${c.title||'Ma pose'}</div>
+      <div class="font-script text-lg leading-tight" style="color:var(--accent-d)">${esc(c.title||'Ma pose')}</div>
       <div class="text-[10px] text-gray-500">${new Date(c.date).toLocaleDateString('fr-FR')}</div>
-      <div class="text-[11px]">${'⭐'.repeat(c.rating||0)}</div>
-      ${c.wear?`<div class="text-[10px]" style="color:var(--accent)">Tenue : ${c.wear} sem.</div>`:''}
+      <div class="text-[11px]">${'⭐'.repeat(Math.min(5,c.rating||0))}</div>
+      ${c.wear?`<div class="text-[10px]" style="color:var(--accent)">Tenue : ${esc(c.wear)} sem.</div>`:''}
       <div class="flex gap-1 mt-1">
         <button onclick="storyCard('${c.id}')" class="btn-primary text-[9px] px-2 py-1 flex-1">🎀 Story</button>
         <button onclick="delCarnet('${c.id}')" class="text-red-300 px-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
@@ -968,6 +1046,7 @@ function carnetCard(c){
 let carnetPhotoTmp = null;
 function carnetForm(){
   carnetPhotoTmp = null;
+  carnetStars = 0;   // repart de zéro (sinon une note laissée d'un formulaire annulé resterait)
   openModal(`
     <div class="flex items-center justify-between mb-3">
       <h3 class="font-cute font-bold text-lg" style="color:var(--accent-d)">Fiche souvenir 📔</h3>
@@ -991,7 +1070,8 @@ function carnetForm(){
 let carnetStars = 0;
 function setStars(n){ carnetStars=n; document.querySelectorAll('#cf-stars button').forEach(b=> b.style.opacity = (+b.dataset.n<=n)?'1':'.3'); }
 async function carnetPhoto(e){
-  carnetPhotoTmp = await readImage(e.target.files[0]).catch(()=>null);
+  const raw = await readImage(e.target.files[0]).catch(()=>null);
+  carnetPhotoTmp = raw ? await downscaleImage(raw, 1200, 0.75) : null;   // allège la photo avant stockage
   if(carnetPhotoTmp){ document.getElementById('cf-photo-lbl').innerHTML = `<img src="${carnetPhotoTmp}" class="w-full h-28 object-cover rounded-xl">`; }
 }
 function saveCarnet(){
@@ -1003,7 +1083,8 @@ function saveCarnet(){
     rating:carnetStars, wear:document.getElementById('cf-wear').value,
     palette:[...DB.pose.nails]
   });
-  save(); closeModal(); pinkConfetti(); heartBurst(); carnetStars=0; toast('📔 Souvenir enregistré !'); renderCarnet();
+  if(!save()){ return; }   // mémoire pleine → pas de faux « enregistré »
+  closeModal(); pinkConfetti(); heartBurst(); carnetStars=0; toast('📔 Souvenir enregistré !'); renderCarnet();
 }
 function delCarnet(id){ if(confirm('Supprimer cette fiche ?')){ DB.carnet=DB.carnet.filter(c=>c.id!==id); save(); renderCarnet(); } }
 
@@ -1021,7 +1102,7 @@ function storyCard(id){
       <div style="position:absolute;top:12px;right:16px;font-size:22px">💖</div>
       <div style="position:absolute;bottom:12px;left:16px;font-size:18px">✨</div>
       <div style="position:absolute;bottom:12px;right:16px;font-size:18px">✨</div>
-      <div style="text-align:center;font-family:'Dancing Script',cursive;font-size:30px;color:#E84E8A;margin:6px 0 4px">${c.title||'Ma pose du jour'}</div>
+      <div style="text-align:center;font-family:'Dancing Script',cursive;font-size:30px;color:#E84E8A;margin:6px 0 4px">${esc(c.title||'Ma pose du jour')}</div>
       <div style="text-align:center;font-size:12px;color:#c799b0;margin-bottom:12px">${new Date(c.date).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}</div>
       ${c.photo?`<img src="${c.photo}" crossorigin="anonymous" style="width:100%;height:230px;object-fit:cover;border-radius:20px;border:4px solid #fff">`:`<div style="width:100%;height:230px;border-radius:20px;background:${pal[2]};display:flex;align-items:center;justify-content:center;font-size:64px">💅</div>`}
       <div style="display:flex;gap:6px;justify-content:center;margin-top:14px">
@@ -1222,15 +1303,17 @@ function renderPlans(){
 function promoCard(p){
   return `<div class="card-heart-border bg-white/80 rounded-2xl p-3 mb-2 flex items-center gap-3">
     <div class="flex-1 min-w-0">
-      <div class="font-cute font-bold" style="color:var(--accent-d)">${p.shop}</div>
-      ${p.discount?`<span class="badge-pastel">✨ ${p.discount}</span>`:''}
+      <div class="font-cute font-bold" style="color:var(--accent-d)">${esc(p.shop)}</div>
+      ${p.discount?`<span class="badge-pastel">✨ ${esc(p.discount)}</span>`:''}
     </div>
-    <button onclick="copyPromo('${p.code.replace(/'/g,"\\'")}')" class="btn-primary px-3 py-2 text-sm font-mono flex items-center gap-1">
-      <i data-lucide="copy" class="w-3.5 h-3.5"></i> ${p.code}</button>
+    <button onclick="copyPromo('${p.id}')" class="btn-primary px-3 py-2 text-sm font-mono flex items-center gap-1">
+      <i data-lucide="copy" class="w-3.5 h-3.5"></i> ${esc(p.code)}</button>
     <button onclick="delPromo('${p.id}')" class="text-red-300"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
   </div>`;
 }
-function copyPromo(code){
+function copyPromo(id){
+  const p = DB.promos.find(x=>x.id===id); if(!p) return;
+  const code = p.code;
   const done = ()=>{
     toast('🎀 Code copié : '+code);
     // pluie de petits nœuds
@@ -1258,7 +1341,8 @@ function savePromo(){
   const shop=document.getElementById('pf-shop').value.trim(), code=document.getElementById('pf-code').value.trim();
   if(!shop||!code) return toast('Remplis boutique + code 💕');
   DB.promos.push({ id:uid(), shop, code, discount:document.getElementById('pf-disc').value.trim() });
-  save(); closeModal(); pinkConfetti(); renderPlans();
+  if(!save()) return;
+  closeModal(); pinkConfetti(); renderPlans();
 }
 function delPromo(id){ DB.promos=DB.promos.filter(p=>p.id!==id); save(); renderPlans(); }
 
@@ -1334,6 +1418,7 @@ async function pushRemote(){
       .upsert({ owner_id: cloudUser.id, data: DB }, { onConflict:'owner_id' });
     if(error) throw error;
     DB._syncedAt = DB._localTs;
+    try{ localStorage.setItem(DB_KEY, JSON.stringify(DB)); }catch(e){}   // mémorise l'horodatage synchronisé
     setSync('ok');
   }catch(e){ setSync('warn'); }
 }
@@ -1346,18 +1431,36 @@ async function pullRemote(){
     if(data && data.data && Object.keys(data.data).length){
       const remote = data.data;
       const remoteTs = remote._localTs || new Date(data.updated_at).getTime();
-      // On garde la version la plus récente entre cet appareil et le cloud.
+      const hasLocalUnsynced = (DB._localTs||0) > (DB._syncedAt||0);
       if(remoteTs > (DB._localTs||0)){
-        DB = Object.assign(structuredClone(defaultDB), remote);
-        save(true);                 // persiste en local, sans re-pousser
+        if(hasLocalUnsynced){
+          mergeRemoteIntoLocal(remote); // des modifs locales non envoyées → on FUSIONNE (rien n'est perdu)
+          await pushRemote();
+        } else {
+          DB = Object.assign(structuredClone(defaultDB), remote); // rien de local en attente → on adopte le cloud
+          save(true);
+        }
       } else if((DB._localTs||0) > remoteTs){
-        await pushRemote();         // le local est plus frais → on l'envoie
+        await pushRemote();           // le local est plus frais → on l'envoie
       }
     } else {
-      await pushRemote();           // aucune ligne distante → on crée la première
+      await pushRemote();             // aucune ligne distante → on crée la première
     }
     setSync('ok');
   }catch(e){ setSync('warn'); }
+}
+// Fusionne le document distant dans le local sans rien perdre : union des collections par id.
+function mergeRemoteIntoLocal(remote){
+  const merged = Object.assign(structuredClone(defaultDB), remote);
+  ['gels','decors','carnet','inspirations','promos'].forEach(k=>{
+    const map = new Map();
+    (remote[k]||[]).forEach(x=> x && x.id && map.set(x.id, x));
+    (DB[k]||[]).forEach(x=> x && x.id && map.set(x.id, x)); // en cas de même id, la version locale gagne
+    merged[k] = [...map.values()];
+  });
+  merged._localTs = Date.now();
+  DB = merged;
+  save(true);
 }
 
 /* ---------- Connexion / compte ---------- */
@@ -1408,11 +1511,25 @@ async function doLogout(){
   cloudUser = null; closeModal(); setSync('off'); showLogin();
 }
 
+/* Peuple la couche décorative flottante (une seule fois) */
+function renderDeco(){
+  const d = document.getElementById('deco'); if(!d) return;
+  const emo = ['🎀','💖','✨','🌸','💅','🤍','💫','🩰','🫧'];
+  let html = '';
+  for(let i=0;i<11;i++){
+    const e = emo[Math.floor(Math.random()*emo.length)];
+    const size = 18 + Math.random()*30;
+    html += `<span style="left:${(Math.random()*92).toFixed(1)}vw; top:${(Math.random()*92).toFixed(1)}vh; font-size:${size.toFixed(0)}px; animation-delay:${(Math.random()*8).toFixed(1)}s; animation-duration:${(8+Math.random()*6).toFixed(1)}s">${e}</span>`;
+  }
+  d.innerHTML = html;
+}
+
 /* ================================================================
    DÉMARRAGE
    ================================================================ */
 window.addEventListener('DOMContentLoaded', async ()=>{
   lucide.createIcons();
+  renderDeco();                        // décor de fond
   switchTab('studio');                 // rend l'appli tout de suite (cache local)
   setSync('off');
   initCloud();
