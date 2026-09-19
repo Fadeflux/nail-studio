@@ -7,6 +7,7 @@
 
 <!-- ===== PWA / Add to Home Screen ===== -->
 <meta name="theme-color" content="#FF7EB9">
+<meta name="color-scheme" content="light dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -54,7 +55,9 @@
     --shadow-rose:rgba(255,126,185,.35);
   }
   *{ -webkit-tap-highlight-color: transparent; }
-  html,body{ overscroll-behavior-y: none; overflow-x: hidden; }  /* pas de barre horizontale (confettis/décor en vw) */
+  html,body{ overscroll-behavior-y: none; }
+  /* Pas d'overflow-x sur html/body : ça cassait le défilement molette.
+     Les éléments animés (confettis, décor) sont bornés pour ne pas déborder. */
   body{
     font-family:'Quicksand',sans-serif;
     background:var(--creme);
@@ -216,6 +219,38 @@
     nav .nav-btn i{ width:20px; height:20px; }
     nav .nav-btn.active{ background:var(--shadow-rose); transform:translateY(0) scale(1.03); }
     nav .nav-dot{ display:none; }
+  }
+
+  /* ============================================================
+     MODE SOMBRE (si le navigateur/système est en sombre) — thème rose nuit
+     ============================================================ */
+  @media (prefers-color-scheme: dark){
+    :root{ --shadow-rose:rgba(255,90,160,.30); }
+    body{ color:#f2d7e5; }
+    body[data-theme="studio"] { background:linear-gradient(160deg,#1c0f18 0%,#2a1422 100%); }
+    body[data-theme="stock"]  { background:linear-gradient(160deg,#1e0f1c 0%,#2c1230 100%); }
+    body[data-theme="scan"]   { background:linear-gradient(160deg,#1b0f1e 0%,#181a2e 100%); }
+    body[data-theme="carnet"] { background:linear-gradient(160deg,#221019 0%,#2a1320 100%); }
+    body[data-theme="tuto"]   { background:linear-gradient(160deg,#210f1b 0%,#2c1226 100%); }
+    body[data-theme="plans"]  { background:linear-gradient(160deg,#211410 0%,#2a1a18 100%); }
+    .card{ background:rgba(48,26,40,.74); border-color:rgba(255,150,200,.14);
+      box-shadow:0 10px 26px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06); }
+    .card-heart-border{ background:rgba(48,26,40,.6); }
+    input,select,textarea{ background:#2c1826; color:#f6e2ec; border-color:#5a2f47; }
+    input::placeholder,textarea::placeholder{ color:#b98aa5; }
+    label{ color:#e6acc8; }
+    .chip{ background:#2c1826; color:#ffb3d6; }
+    .btn-soft{ background:#2c1826; color:#ff9ecb; }
+    .badge-pastel{ background:linear-gradient(135deg,#4a2236,#5a2942); color:#ffc2de; }
+    header{ background:rgba(24,13,20,.72)!important; border-bottom-color:rgba(255,120,180,.16); }
+    nav{ background:rgba(30,17,26,.9)!important; border-top-color:#42243a!important; }
+    @media (min-width:768px){ nav{ border-color:#42243a!important; } }
+    .polaroid{ background:#2c1826; }
+    .text-gray-400{ color:#a888a0!important; }
+    .text-gray-500{ color:#b89ab0!important; }
+    #modal{ background:rgba(10,4,8,.6)!important; }
+    #login-gate{ background:linear-gradient(160deg,#1c0f18,#2a1320)!important; }
+    details > summary{ color:#ffb3d6; }
   }
 
   /* Respect des personnes qui réduisent les animations */
@@ -426,7 +461,7 @@ function starRain(){
     const s = document.createElement('div');
     s.className='star-drop';
     s.textContent = stars[Math.floor(Math.random()*stars.length)];
-    s.style.left = Math.random()*100+'vw';
+    s.style.left = Math.random()*90+'vw';
     s.style.fontSize = (12+Math.random()*22)+'px';
     s.style.animationDuration = (1.4+Math.random()*1.4)+'s';
     s.style.animationDelay = (Math.random()*.5)+'s';
@@ -558,91 +593,126 @@ const OPTIONS = {
   technique:['Gainage','Capsules Gel-X','Popits / Dual Forms','Semi-permanent'],
   forme:['Amande','Carré','Carré arrondi','Coffin / Ballerine','Stiletto','Ovale'],
   longueur:['Courte','Moyenne','Longue','XL'],
-  style:['Clean Girl','Glazed','Y2K','Marbre','French revisitée','Floral','Chrome']
+  style:['Clean Girl','Glazed','Milky','French','Babyboomer','Chrome','Cat Eye','Aura','Ombré','Y2K','Marbre','Velours mat','Floral','Cœurs','Strass','Léopard','Cerise','Néon','Sirène','Confettis','Papillon','Vaches','Nude chic']
 };
 const FINGERS = ['Pouce','Index','Majeur','Annulaire','Auriculaire'];
 
-// Génère le SVG d'un ongle selon la forme, la longueur et la finition
-function nailSVG(color, forme, longueur, finish, idx){
-  const lenMap = { 'Courte':70,'Moyenne':95,'Longue':120,'XL':145 };
-  const H = lenMap[longueur]||95;
-  const W = 46;
-  const gid = 'g'+idx;   // id stable (plus de régénération à chaque rendu)
-  // Chemin de l'ongle selon la forme (tip)
-  let tip;
-  switch(forme){
-    case 'Carré': tip = `L${W} ${H*0.2} L${W} ${H} L0 ${H} L0 ${H*0.2}`; break;
-    case 'Carré arrondi': tip = `L${W} ${H*0.2} L${W} ${H-14} Q${W} ${H} ${W-14} ${H} L14 ${H} Q0 ${H} 0 ${H-14} L0 ${H*0.2}`; break;
-    case 'Coffin / Ballerine': tip = `L${W} ${H*0.2} L${W-8} ${H-10} Q${W-8} ${H} ${W-16} ${H} L16 ${H} Q8 ${H} 8 ${H-10} L0 ${H*0.2}`; break;
-    case 'Stiletto': tip = `L${W} ${H*0.2} L${W/2+3} ${H} L${W/2-3} ${H} L0 ${H*0.2}`; break;
-    case 'Ovale': tip = `L${W} ${H*0.2} L${W} ${H-26} Q${W} ${H} ${W/2} ${H} Q0 ${H} 0 ${H-26} L0 ${H*0.2}`; break;
-    default: /* Amande */ tip = `L${W} ${H*0.2} L${W-4} ${H-30} Q${W/2} ${H} ${W/2} ${H} Q${4} ${H-30} 0 ${H*0.2}`;
+// ============ VISUALISEUR : DEUX MAINS ============
+const SKIN = { s:'#F4CBBD', d:'#E3A794', line:'#C98B79' };
+
+// Un ongle posé au bout d'un doigt (forme + finition + couleur), cliquable
+function nailShapeOnFinger(idx, cx, tipY, w, side){
+  const p = DB.pose;
+  const h = { 'Courte':18,'Moyenne':24,'Longue':32,'XL':40 }[p.longueur] || 24;
+  const nw = Math.max(13, w*0.66);
+  const x = cx - nw/2, y = tipY + 2, bx=x, ex=x+nw, mx=cx;
+  const col = p.nails[idx] || '#FFDDE8';
+  let d;
+  switch(p.forme){
+    case 'Carré':            d=`M${bx} ${y} L${ex} ${y} L${ex} ${y+h} L${bx} ${y+h} Z`; break;
+    case 'Stiletto':         d=`M${bx} ${y} L${ex} ${y} L${mx} ${y+h} Z`; break;
+    case 'Coffin / Ballerine': d=`M${bx} ${y} L${ex} ${y} L${(ex-nw*0.22).toFixed(1)} ${y+h} L${(bx+nw*0.22).toFixed(1)} ${y+h} Z`; break;
+    case 'Ovale':            d=`M${bx} ${y} L${ex} ${y} L${ex} ${(y+h*0.55).toFixed(1)} Q${ex} ${y+h} ${mx} ${y+h} Q${bx} ${y+h} ${bx} ${(y+h*0.55).toFixed(1)} Z`; break;
+    case 'Carré arrondi':    d=`M${bx} ${y} L${ex} ${y} L${ex} ${y+h-5} Q${ex} ${y+h} ${ex-5} ${y+h} L${bx+5} ${y+h} Q${bx} ${y+h} ${bx} ${y+h-5} Z`; break;
+    default: /* Amande */    d=`M${bx} ${y} L${ex} ${y} L${(ex-1).toFixed(1)} ${(y+h*0.5).toFixed(1)} Q${mx} ${y+h} ${mx} ${y+h} Q${(bx+1).toFixed(1)} ${(y+h*0.5).toFixed(1)} ${bx} ${y} Z`;
   }
-  const path = `M0 ${H*0.2} Q${W/2} -6 ${W} ${H*0.2} ${tip} Z`;
+  let fx='';
+  if(p.finish==='glossy') fx=`<path d="${d}" fill="url(#gloss${side})" style="mix-blend-mode:screen"/>`;
+  else if(p.finish==='mat') fx=`<path d="${d}" fill="#000" opacity=".07"/>`;
+  else if(p.finish==='glitter'){ let s=idx*9301+49297; const rnd=()=>{s=(s*9301+49297)%233280;return s/233280;}; let dd=''; for(let i=0;i<8;i++){ dd+=`<circle cx="${(x+2+rnd()*(nw-4)).toFixed(1)}" cy="${(y+2+rnd()*(h-3)).toFixed(1)}" r="${(.6+rnd()*1).toFixed(2)}" fill="#fff" opacity="${(.5+rnd()*.5).toFixed(2)}"/>`; } fx=dd; }
+  return `<g onclick="pickNailColor(${idx})" style="cursor:pointer"><path d="${d}" fill="${col}" stroke="rgba(255,255,255,.75)" stroke-width="1.3"/>${fx}</g>`;
+}
 
-  // Finition
-  let overlay = '';
-  if(finish==='glossy'){
-    overlay = `<path d="${path}" fill="url(#${gid}gloss)" class="nail-gloss"/>`;
-  } else if(finish==='glitter'){
-    // positions DÉTERMINISTES (seed = idx) : les paillettes ne sautillent plus à chaque rendu
-    let dots=''; let s = idx*9301 + 49297;
-    const rnd = ()=>{ s = (s*9301 + 49297) % 233280; return s/233280; };
-    for(let i=0;i<14;i++){ dots+=`<circle cx="${(6+rnd()*(W-12)).toFixed(1)}" cy="${(H*0.25+rnd()*(H*0.7)).toFixed(1)}" r="${(.8+rnd()*1.4).toFixed(2)}" fill="#fff" opacity="${(.5+rnd()*.5).toFixed(2)}"/>`; }
-    overlay = dots;
-  } // mat = pas d'overlay brillant
-
-  return `<svg viewBox="-4 -10 ${W+8} ${H+12}" style="width:100%;height:100%;filter:drop-shadow(0 3px 5px rgba(200,80,140,.35))">
+// Une main complète (side 'L' ou 'R'), 5 doigts + ongles cliquables
+function handSVG(side){
+  const fingers = [ [1,78,92,30], [2,118,66,33], [3,158,84,31], [4,192,122,27] ]; // index, majeur, annulaire, auriculaire
+  const palmTop = 210;
+  const fg = fingers.map(([idx,cx,tipY,w])=>{
+    const half=w/2, r=half;
+    const path=`M${cx-half} ${palmTop} L${cx-half} ${tipY+r} Q${cx-half} ${tipY} ${cx} ${tipY} Q${cx+half} ${tipY} ${cx+half} ${tipY+r} L${cx+half} ${palmTop} Z`;
+    return `<path d="${path}" fill="url(#skin${side})" stroke="${SKIN.line}" stroke-width="1.1"/>` + nailShapeOnFinger(idx, cx, tipY, w, side);
+  }).join('');
+  const thumb = `<g transform="rotate(-40 60 232)">
+    <path d="M46 236 L46 176 Q46 158 62 158 Q78 158 78 176 L78 236 Z" fill="url(#skin${side})" stroke="${SKIN.line}" stroke-width="1.1"/>
+    ${nailShapeOnFinger(0, 62, 160, 30, side)}
+  </g>`;
+  const palm = `<path d="M48 205 Q34 250 56 288 Q86 314 128 310 Q188 306 202 266 Q212 232 196 200 Q150 214 120 210 Q84 214 48 205 Z" fill="url(#skin${side})" stroke="${SKIN.line}" stroke-width="1.1"/>`;
+  const mirror = side==='L' ? 'transform="translate(240,0) scale(-1,1)"' : '';
+  return `<svg viewBox="0 0 240 332" style="width:100%;height:auto;max-height:330px;filter:drop-shadow(0 8px 12px var(--shadow-rose))">
     <defs>
-      <linearGradient id="${gid}gloss" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#ffffff" stop-opacity=".7"/>
-        <stop offset="0.4" stop-color="#ffffff" stop-opacity="0"/>
-        <stop offset="1" stop-color="#ffffff" stop-opacity=".25"/>
-      </linearGradient>
+      <linearGradient id="skin${side}" x1="0" y1="0" x2="0.25" y2="1"><stop offset="0" stop-color="${SKIN.s}"/><stop offset="1" stop-color="${SKIN.d}"/></linearGradient>
+      <linearGradient id="gloss${side}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity=".28"/></linearGradient>
     </defs>
-    <path d="${path}" fill="${color}" stroke="rgba(255,255,255,.6)" stroke-width="1.5"/>
-    ${finish==='mat'?`<path d="${path}" fill="#000" opacity=".05"/>`:''}
-    ${overlay}
+    <g ${mirror}>${palm}${thumb}${fg}</g>
   </svg>`;
 }
+
+// ============ SÉLECTEUR DE COULEUR (custom, plus joli que le natif) ============
+const NAIL_PRESETS = ['#FFFFFF','#FBEDE8','#F7E7E1','#FFDDE8','#FFC2DE','#FF9EC8','#FF7EB9','#FF3E9A','#E84E8A','#C74375','#B76E79','#7B1E3B','#B11226','#EAD3D1','#E6C6BE','#C86B7A','#D6C7FF','#B6D9FF','#C9F0D8','#F6E58D','#111111','#C7A24A'];
+function openColorPicker(i){
+  const cur = DB.pose.nails[i] || '#FF7EB9';
+  const gelsRow = DB.gels.filter(g=>g.hex);
+  openModal(`
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="font-cute font-bold text-lg" style="color:var(--accent-d)">Couleur — ${FINGERS[i]} 💅</h3>
+      <button onclick="closeModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div class="flex items-center gap-3 mb-4">
+      <span id="cp-preview" class="w-14 h-14 rounded-2xl border-2 border-white shadow flex-shrink-0" style="background:${cur}"></span>
+      <div><div class="font-cute font-bold" style="color:var(--accent-d)">Aperçu</div><div id="cp-hex" class="text-xs text-gray-400 font-mono">${cur}</div></div>
+    </div>
+    <label class="!mb-2">Teintes douces</label>
+    <div class="grid grid-cols-8 gap-2 mb-4">
+      ${NAIL_PRESETS.map(c=>`<button onclick="setNailColor(${i},'${c}')" class="w-full rounded-full border-2 border-white shadow" style="aspect-ratio:1;background:${c}"></button>`).join('')}
+    </div>
+    ${gelsRow.length?`<label class="!mb-2">Mes gels</label>
+      <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1 mb-4">
+        ${gelsRow.map(g=>`<button onclick="setNailColor(${i},'${g.hex}')" class="flex-shrink-0 flex flex-col items-center"><span class="w-10 h-10 rounded-full border-2 border-white shadow" style="background:${g.hex}"></span><span class="text-[8px] mt-0.5 max-w-[52px] truncate">${esc(g.brand)}</span></button>`).join('')}
+      </div>`:''}
+    <div class="flex items-center gap-2">
+      <label class="btn-soft px-3 py-2.5 text-xs flex items-center gap-1 cursor-pointer mb-0 relative overflow-hidden">
+        <i data-lucide="pipette" class="w-3.5 h-3.5"></i> Nuancier
+        <input type="color" value="${cur}" class="absolute inset-0 opacity-0 cursor-pointer" oninput="livePreview(this.value)" onchange="setNailColor(${i}, this.value)">
+      </label>
+      <input id="cp-input" value="${cur}" placeholder="#FF7EB9" class="flex-1 font-mono" oninput="livePreview(this.value)">
+      <button onclick="setNailColor(${i}, document.getElementById('cp-input').value)" class="btn-primary px-5 py-2.5 text-sm">OK 💖</button>
+    </div>
+  `);
+}
+function livePreview(v){ const p=document.getElementById('cp-preview'), h=document.getElementById('cp-hex'); const val=(v&&v[0]!=='#')?'#'+v:v; if(p && /^#[0-9a-fA-F]{3,8}$/.test(val)){ p.style.background=val; if(h) h.textContent=val; } }
+function setNailColor(i, hex){ if(!hex) return; if(hex[0]!=='#') hex='#'+hex; if(!/^#[0-9a-fA-F]{3,8}$/.test(hex)) return toast('Couleur invalide 🥺'); DB.pose.nails[i]=hex; save(); closeModal(); pinkConfetti(); renderTab(); }
 
 function renderStudio(){
   const p = DB.pose;
   const app = document.getElementById('app');
 
-  const fingerScale = [0.72, 0.9, 1, 0.92, 0.7]; // hauteur relative des doigts
-  const nailsHtml = p.nails.map((c,i)=>`
-    <button onclick="pickNailColor(${i})" class="flex flex-col items-center justify-end" style="height:170px;width:19%">
-      <div style="height:${fingerScale[i]*100}%;width:100%;max-width:44px" class="flex items-end">
-        ${nailSVG(c, p.forme, p.longueur, p.finish, i)}
-      </div>
-      <span class="text-[8px] mt-1 font-semibold" style="color:var(--accent-d)">${FINGERS[i]}</span>
-    </button>`).join('');
-
   const filterGroup = (label,key)=>`
-    <div class="mb-3">
-      <label>${label}</label>
-      <div class="flex flex-wrap gap-1.5">
+    <div class="mb-4">
+      <label class="!text-[13px] !mb-2">${label}</label>
+      <div class="flex flex-wrap gap-2">
         ${OPTIONS[key].map(o=>`<span class="chip ${p[key]===o?'active':''}" onclick="setPose('${key}','${o.replace(/'/g,"\\'")}')">${o}</span>`).join('')}
       </div>
     </div>`;
 
   app.innerHTML = `
-    <div class="md:grid md:grid-cols-2 md:gap-5 md:items-start">
-    <div>
-    <!-- Visualiseur de main -->
+    <!-- LES DEUX MAINS (gauche à gauche, droite à droite) -->
     <div class="card p-4 mb-4 relative overflow-hidden">
       <div class="sparkle" style="top:8px;right:14px">✨</div>
       <div class="sparkle" style="bottom:10px;left:10px;animation-delay:1s">💖</div>
-      <div class="flex items-center justify-between mb-2">
-        <h2 class="font-cute font-bold text-lg" style="color:var(--accent-d)">Ta main 🖐️</h2>
-        <span class="badge-pastel">${p.mainNonDom?'Main non-dominante':'Main dominante'}</span>
+      <h2 class="font-cute font-bold text-lg text-center" style="color:var(--accent-d)">Tes mains 🖐️</h2>
+      <p class="text-center text-[11px] mb-3" style="color:var(--accent)">👆 Touche un ongle pour choisir sa couleur</p>
+      <div class="grid grid-cols-2 gap-3 md:gap-10 items-center max-w-2xl mx-auto">
+        <div>
+          <div class="badge-pastel block text-center mb-1">🤚 Main gauche</div>
+          ${handSVG('L')}
+        </div>
+        <div>
+          <div class="badge-pastel block text-center mb-1">Main droite ✋</div>
+          ${handSVG('R')}
+        </div>
       </div>
-      <div class="flex justify-center items-end gap-1 px-2 md:max-w-sm md:mx-auto">${nailsHtml}</div>
-      <p class="text-center text-[11px] mt-2" style="color:var(--accent)">👆 Touche un ongle pour changer sa couleur</p>
-
-      <!-- Toggle finition -->
-      <div class="flex gap-2 mt-3 justify-center">
+      <!-- Finition -->
+      <div class="flex flex-wrap gap-2 mt-4 justify-center">
         ${[['glossy','Glossy miroir','✨'],['mat','Mat velours','🌫️'],['glitter','Top pailleté','💫']]
           .map(([v,l,e])=>`<button onclick="setFinish('${v}')" class="chip ${p.finish===v?'active':''}">${e} ${l}</button>`).join('')}
       </div>
@@ -652,39 +722,33 @@ function renderStudio(){
       </label>
     </div>
 
-    </div>
-    <div>
-    <!-- Filtres de pose -->
+    <!-- GELS DU STOCK -->
     <div class="card p-4 mb-4">
-      <h3 class="font-cute font-bold mb-3" style="color:var(--accent-d)">🎨 Compose ta pose</h3>
-      ${filterGroup('Technique','technique')}
-      ${filterGroup('Forme','forme')}
-      ${filterGroup('Longueur','longueur')}
-      ${filterGroup('Style','style')}
-    </div>
-
-    <!-- Palette rapide depuis le stock -->
-    <div class="card p-4 mb-4">
-      <h3 class="font-cute font-bold mb-2" style="color:var(--accent-d)">💅 Mes gels (touche pour teindre l'ongle sélectionné)</h3>
+      <h3 class="font-cute font-bold mb-2" style="color:var(--accent-d)">💅 Mes gels
+        <span class="text-[11px] font-normal" style="color:var(--accent)">— touche pour teindre <b id="sel-nail-label">${FINGERS[selectedNail]}</b></span></h3>
       ${DB.gels.length? `<div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
           ${DB.gels.map(g=>`<button onclick="applyGelToSelected('${g.hex||'#FF7EB9'}')" class="flex flex-col items-center flex-shrink-0">
-            <span class="w-9 h-9 rounded-full border-2 border-white shadow" style="background:${g.hex||'#FF7EB9'}"></span>
+            <span class="w-10 h-10 rounded-full border-2 border-white shadow" style="background:${g.hex||'#FF7EB9'}"></span>
             <span class="text-[8px] mt-0.5 max-w-[54px] truncate">${esc(g.brand)}</span></button>`).join('')}
         </div>` : `<p class="text-xs text-gray-400">Ajoute des gels dans l'onglet Stock ✨</p>`}
-      <div class="mt-2 text-[11px] text-gray-400">Ongle sélectionné : <b id="sel-nail-label" style="color:var(--accent-d)">${FINGERS[selectedNail]}</b></div>
     </div>
 
-    <!-- Moteur de génération -->
-    <div class="grid grid-cols-2 gap-3 mb-2">
-      <button onclick="createPose()" class="btn-soft py-3 flex items-center justify-center gap-1 text-sm">
-        <i data-lucide="wand-2" class="w-4 h-4"></i> Créer ma pose
-      </button>
-      <button onclick="surpriseMe()" class="btn-primary py-3 flex items-center justify-center gap-1 text-sm">
-        <i data-lucide="dices" class="w-4 h-4"></i> Surprends-moi !
-      </button>
+    <!-- GÉNÉRATION -->
+    <div class="grid grid-cols-2 gap-3 mb-3">
+      <button onclick="createPose()" class="btn-soft py-3.5 flex items-center justify-center gap-1 text-sm"><i data-lucide="wand-2" class="w-4 h-4"></i> Créer ma pose</button>
+      <button onclick="surpriseMe()" class="btn-primary py-3.5 flex items-center justify-center gap-1 text-sm"><i data-lucide="dices" class="w-4 h-4"></i> Surprends-moi !</button>
     </div>
-    <div id="texture-alert" class="text-center text-xs"></div>
-    </div>
+    <div id="texture-alert" class="text-center text-xs mb-4"></div>
+
+    <!-- COMPOSE TA POSE (EN BAS) -->
+    <div class="card p-4 mb-2">
+      <h3 class="font-cute font-bold mb-3 text-center" style="color:var(--accent-d)">🎨 Compose ta pose</h3>
+      <div class="md:grid md:grid-cols-2 md:gap-x-8">
+        ${filterGroup('Technique','technique')}
+        ${filterGroup('Forme','forme')}
+        ${filterGroup('Longueur','longueur')}
+        ${filterGroup('Style','style')}
+      </div>
     </div>
   `;
   checkTextureCompat();
@@ -709,11 +773,7 @@ function toggleNonDom(v){
 function pickNailColor(i){
   selectedNail = i;
   const lbl = document.getElementById('sel-nail-label'); if(lbl) lbl.textContent = FINGERS[i];
-  // petit sélecteur de couleur natif
-  const inp = document.createElement('input'); inp.type='color'; inp.value = DB.pose.nails[i];
-  inp.oninput = e=>{ DB.pose.nails[i]=e.target.value; };
-  inp.onchange = e=>{ DB.pose.nails[i]=e.target.value; save(); renderTab(); };
-  inp.click();
+  openColorPicker(i);   // sélecteur maison (fini le pop-up natif moche)
 }
 function applyGelToSelected(hex){ DB.pose.nails[selectedNail]=hex; save(); pinkConfetti(); renderTab(); }
 function createPose(){
@@ -1169,6 +1229,47 @@ const GUIDES = {
   'Semi-permanent':['Repousser cuticules + limer légèrement','Dégraisser (cleaner)','Base 60s','2 couches de couleur (60s chacune)','Nail art éventuel','Top coat 60s + essuyage 🌸']
 };
 let timerInt=null, timerLeft=0, timerTotal=0;
+
+// Popup de conseil qui RESTE affiché jusqu'à ce qu'on ferme (croix)
+function openTipModal(emoji, title, lines){
+  openModal(`
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="font-cute font-bold text-lg" style="color:var(--accent-d)">${emoji} ${title}</h3>
+      <button onclick="closeModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <ol class="space-y-2">
+      ${lines.map((s,i)=>`<li class="flex items-start gap-2 text-sm">
+        <span class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style="background:var(--accent)">${i+1}</span>
+        <span>${s}</span></li>`).join('')}
+    </ol>
+    <button onclick="closeModal()" class="btn-primary w-full py-3 mt-4">💖 J'ai compris</button>
+  `);
+}
+// Conseils nail art détaillés (schémas pas-à-pas)
+const NAILART_TIPS = {
+  'Fleur':{e:'🌸', steps:['Dépose 5 petits points en cercle au liner ou dotting tool','Depuis chaque point, tire une virgule vers le centre','Ajoute un point contrasté au milieu','Petites feuilles vertes entre les fleurs (optionnel)','Top coat pour tout lisser ✨']},
+  'Cœur':{e:'🤍', steps:['Pose 2 gouttes de gel côte à côte','Avec un liner, tire une pointe vers le bas en les reliant','Affine les bords, arrondis le haut','Top coat 💕']},
+  'Nœud':{e:'🎀', steps:['Trace 2 petits triangles pointe à pointe','Ajoute un petit carré au centre pour le nœud','2 rubans qui descendent en dessous','Un point blanc de lumière + top coat']},
+  'French':{e:'🤍', steps:['Ligne fine et régulière au bord libre (liner ou capsule)','Épaisseur identique sur tous les ongles','Laisse sécher puis top coat','Variante : ligne colorée ou dorée']},
+  'Ombré / Dégradé':{e:'🌈', steps:['Applique 2 teintes côte à côte sur une éponge','Tamponne l\'éponge sur l\'ongle','Répète 2-3 fois pour intensifier','Nettoie les contours + top coat']},
+  'Chrome / Miroir':{e:'🪞', steps:['Base couleur + top coat SANS essuyer la couche collante… non : top coat catalysé','Frotte la poudre chrome avec un applicateur mousse','Fais briller jusqu\'à l\'effet miroir','Top coat par-dessus pour sceller']},
+  'Cat Eye':{e:'👁️', steps:['Applique le gel Cat Eye (magnétique)','Approche l\'aimant SANS toucher, 3-5 s','Crée la ligne de lumière (droite, courbe ou étoile)','Catalyse en gardant la position + top coat']},
+  'Léopard':{e:'🐆', steps:['Pose des taches ovales irrégulières (beige/doré)','Autour de chaque tache, 2-3 petits arcs bruns','Quelques points noirs isolés','Top coat']},
+  'Cerise':{e:'🍒', steps:['2 boules rouges collées','Fine tige verte qui les relie','Petit reflet blanc sur chaque cerise','Top coat brillant']},
+};
+function showNailArt(k){ const t=NAILART_TIPS[k]; if(t) openTipModal(t.e, k, t.steps); }
+
+// Embouts de ponceuse (à quoi sert chaque tête)
+const PONCEUSE_BITS = {
+  'Cône fin':{e:'🔺', steps:['Sert aux cuticules et aux contours','Vitesse BASSE, angle ~45°','Effleure sans appuyer, jamais sur la peau']},
+  'Mandrin cylindre':{e:'🛢️', steps:['Sert à la dépose et à dégrossir le gel','Grain moyen, mouvements de va-et-vient','Ne chauffe pas : ne reste pas au même endroit']},
+  'Boule':{e:'🔵', steps:['Sert sous les cuticules et dans les sillons','Toute petite boule, pression très légère','Jamais directement sur la peau']},
+  'Flamme':{e:'🔥', steps:['Nettoie le repli latéral de l\'ongle','Longe le sillon sans toucher la peau','Vitesse basse']},
+  'Meule silicone':{e:'🩰', steps:['Polit et lisse la surface','Prépare avant le top coat','Donne un fini satiné']},
+  'Limes 100/180/240':{e:'📏', steps:['100 : dessus & forme (gros grain)','180 : affiner la forme','240 : lisser la surface en douceur']},
+};
+function showPonceuse(k){ const t=PONCEUSE_BITS[k]; if(t) openTipModal(t.e, k, t.steps); }
+
 function renderTuto(){
   const app = document.getElementById('app');
   const g = GUIDES[DB.pose.technique] || GUIDES['Gainage'];
@@ -1202,27 +1303,28 @@ function renderTuto(){
       </ol>
     </div>
 
-    <!-- SCHÉMAS NAIL ART -->
+    <!-- SCHÉMAS NAIL ART (popups fermables) -->
     <div class="card p-4 mb-4">
-      <h3 class="font-cute font-bold mb-3" style="color:var(--accent-d)">🎨 Nail art à main levée</h3>
-      <div class="grid grid-cols-3 gap-2">
-        ${[['🌸','Fleur 5 pétales','Point central + 5 pétales autour au liner'],['🤍','Cœur','2 gouttes côte à côte, tire une pointe en bas'],['🎀','Nœud','2 triangles pointe à pointe + carré au centre'],['🍒','Cerise','2 boules rouges + tige verte fine'],['✨','French inversée','Ligne fine à la base du croissant'],['🐆','Léopard','Taches ovales + petits arcs bruns autour']]
-          .map(([e,t,d])=>`<button onclick="toast('${d.replace(/'/g,"\\'")} 💅')" class="card-heart-border bg-white/60 rounded-2xl p-2 text-center">
-            <div class="text-2xl">${e}</div><div class="text-[9px] font-semibold mt-1" style="color:var(--accent-d)">${t}</div></button>`).join('')}
+      <h3 class="font-cute font-bold mb-1" style="color:var(--accent-d)">🎨 Nail art à main levée</h3>
+      <p class="text-[11px] mb-3" style="color:var(--accent)">Touche une idée pour le pas-à-pas détaillé 💕</p>
+      <div class="grid grid-cols-3 md:grid-cols-5 gap-2">
+        ${Object.entries(NAILART_TIPS).map(([k,t])=>`<button onclick="showNailArt('${k.replace(/'/g,"\\'")}')" class="card-heart-border rounded-2xl p-2 text-center">
+          <div class="text-2xl">${t.e}</div><div class="text-[9px] font-semibold mt-1 leading-tight" style="color:var(--accent-d)">${k}</div></button>`).join('')}
       </div>
     </div>
 
-    <!-- MÉMO PONCEUSE + SOS + DÉPOSE -->
-    <div class="grid grid-cols-1 gap-3">
-      <details class="card p-4">
-        <summary class="font-cute font-bold cursor-pointer" style="color:var(--accent-d)">🪅 Embouts de ponceuse & limes</summary>
-        <div class="text-sm mt-2 space-y-1">
-          <p>🔺 <b>Cône fin</b> : cuticules & contours</p>
-          <p>🛢️ <b>Cylindre (mandrin)</b> : dépose & rebulk</p>
-          <p>🟡 <b>Boule</b> : sous les cuticules, sillons latéraux</p>
-          <p>📏 <b>Lime 100/180</b> : forme & finition · 240 : surface douce</p>
-        </div>
-      </details>
+    <!-- EMBOUTS DE PONCEUSE (popups fermables) -->
+    <div class="card p-4 mb-4">
+      <h3 class="font-cute font-bold mb-1" style="color:var(--accent-d)">🪅 Embouts de ponceuse & limes</h3>
+      <p class="text-[11px] mb-3" style="color:var(--accent)">Touche un embout pour savoir à quoi il sert 🛠️</p>
+      <div class="grid grid-cols-3 md:grid-cols-6 gap-2">
+        ${Object.entries(PONCEUSE_BITS).map(([k,t])=>`<button onclick="showPonceuse('${k.replace(/'/g,"\\'")}')" class="card-heart-border rounded-2xl p-2 text-center">
+          <div class="text-2xl">${t.e}</div><div class="text-[9px] font-semibold mt-1 leading-tight" style="color:var(--accent-d)">${k}</div></button>`).join('')}
+      </div>
+    </div>
+
+    <!-- SOS + DÉPOSE -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
       <details class="card p-4">
         <summary class="font-cute font-bold cursor-pointer" style="color:var(--accent-d)">🚑 SOS Ongle cassé</summary>
         <div class="text-sm mt-2 space-y-1">
@@ -1353,7 +1455,7 @@ function copyPromo(id){
     toast('🎀 Code copié : '+code);
     // pluie de petits nœuds
     for(let i=0;i<12;i++){ const b=document.createElement('div'); b.className='star-drop'; b.textContent='🎀';
-      b.style.left=Math.random()*100+'vw'; b.style.fontSize=(14+Math.random()*14)+'px';
+      b.style.left=Math.random()*90+'vw'; b.style.fontSize=(14+Math.random()*14)+'px';
       b.style.animationDuration=(1.2+Math.random())+'s'; document.body.appendChild(b); setTimeout(()=>b.remove(),2600); }
   };
   if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(code).then(done).catch(done); }
