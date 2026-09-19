@@ -19,6 +19,7 @@
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 
 <!-- ===== Polices ===== -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -191,9 +192,13 @@
       </h1>
       <p class="text-[11px] font-script" style="color:var(--accent)" id="header-sub">Ton atelier rien qu'à toi 🎀</p>
     </div>
-    <button id="wakelock-btn" onclick="toggleWakeLock()" class="btn-soft px-3 py-2 text-xs flex items-center gap-1">
-      <i data-lucide="moon" class="w-4 h-4"></i><span id="wakelock-label">Veille</span>
-    </button>
+    <div class="flex items-center gap-1.5">
+      <button id="sync-pill" onclick="pushRemote()" class="text-[10px] font-semibold px-2 py-1 rounded-full" style="background:#fff;color:#9a6" title="État de la synchronisation">☁️</button>
+      <button id="wakelock-btn" onclick="toggleWakeLock()" class="btn-soft px-3 py-2 text-xs flex items-center gap-1">
+        <i data-lucide="moon" class="w-4 h-4"></i><span id="wakelock-label">Veille</span>
+      </button>
+      <button id="account-btn" onclick="accountMenu()" class="btn-soft w-9 h-9 flex items-center justify-center p-0"><i data-lucide="user" class="w-4 h-4"></i></button>
+    </div>
   </div>
 </header>
 
@@ -240,10 +245,29 @@
   <div id="modal-box" class="card w-full max-w-md max-h-[88vh] overflow-y-auto no-scrollbar p-5 view-enter"></div>
 </div>
 
+<!-- ================= ÉCRAN DE CONNEXION ================= -->
+<div id="login-gate" class="fixed inset-0 z-[60] hidden flex-col items-center justify-center p-6"
+     style="background:linear-gradient(160deg,#FFF5F8,#FFE0EF)">
+  <div class="card w-full max-w-sm p-6 text-center relative overflow-hidden">
+    <div class="sparkle" style="top:12px;right:16px">✨</div>
+    <div class="sparkle" style="bottom:12px;left:14px;animation-delay:.9s">💖</div>
+    <div class="text-5xl mb-2">💅🎀</div>
+    <h2 class="font-cute font-bold text-2xl" style="color:var(--accent-d)">Mon Atelier Nail Art</h2>
+    <p class="text-xs mb-5" style="color:var(--accent)">Connecte-toi pour retrouver ton carnet 💕</p>
+    <div class="space-y-3 text-left">
+      <div><label>Email</label><input id="login-email" type="email" autocomplete="username" placeholder="ton email"></div>
+      <div><label>Mot de passe</label><input id="login-pw" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+      <div id="login-error" class="text-xs text-red-500 font-semibold hidden"></div>
+      <button id="login-btn" onclick="doLogin()" class="btn-primary w-full py-3 mt-1">💖 Me connecter</button>
+    </div>
+    <p class="text-[10px] text-gray-400 mt-4">Ton compte est créé pour toi — pas d'inscription ici.</p>
+  </div>
+</div>
+
 <script>
 /* ================================================================
    💅 MON ATELIER NAIL ART — logique complète
-   Tout est autonome, données persistées dans le LocalStorage.
+   Données locales (LocalStorage, cache hors-ligne) + synchro privée Supabase.
    ================================================================ */
 
 /* ---------- 1. PERSISTANCE ---------- */
@@ -265,7 +289,11 @@ function load(){
     return Object.assign(structuredClone(defaultDB), JSON.parse(raw));
   }catch(e){ return structuredClone(defaultDB); }
 }
-function save(){ try{ localStorage.setItem(DB_KEY, JSON.stringify(DB)); }catch(e){ toast('⚠️ Sauvegarde impossible'); } }
+function save(fromSync){
+  if(!fromSync) DB._localTs = Date.now();       // horodate la modif locale
+  try{ localStorage.setItem(DB_KEY, JSON.stringify(DB)); }catch(e){ toast('⚠️ Sauvegarde impossible'); }
+  if(!fromSync) scheduleCloudPush();            // puis on envoie au cloud (différé)
+}
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
 
 /* ---------- 2. DICTIONNAIRE DE COULEURS (marque/réf -> HEX) ---------- */
@@ -1263,12 +1291,141 @@ document.addEventListener('visibilitychange', async ()=>{
 /* ================================================================
    DÉMARRAGE
    ================================================================ */
-window.addEventListener('DOMContentLoaded', ()=>{
+/* ================================================================
+   ☁️ SYNCHRO SUPABASE (privée, 1 document par compte, RLS)
+   ================================================================ */
+const SUPA_URL = 'https://xhofwljbdumktruxlrhk.supabase.co';
+const SUPA_KEY = 'sb_publishable_ddABhTbbLoXGXhjVC2UTyA_99OYpYoR';
+let sb = null, cloudUser = null, syncTimer = null;
+
+function initCloud(){
+  try{ sb = window.supabase.createClient(SUPA_URL, SUPA_KEY, { auth:{ persistSession:true, autoRefreshToken:true } }); }
+  catch(e){ sb = null; }
+}
+// Pastille d'état : ok / pending / warn / off
+function setSync(state){
+  const p = document.getElementById('sync-pill'); if(!p) return;
+  const map = {
+    ok:     ['☁️ ok',   '#e8f7e8', '#3a9d3a'],
+    pending:['⏳ …',    '#fff4e0', '#c98a00'],
+    warn:   ['⚠️ local','#ffe6ee', '#d62580'],
+    off:    ['☁️',      '#fff',    '#9a6']
+  };
+  const [t,bg,fg] = map[state]||map.off;
+  p.textContent = t; p.style.background = bg; p.style.color = fg;
+}
+
+function scheduleCloudPush(){
+  if(!sb || !cloudUser){ setSync('warn'); return; }
+  setSync('pending');
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(pushRemote, 1400);   // regroupe les modifs rapprochées
+}
+async function pushRemote(){
+  if(!sb || !cloudUser){ setSync('warn'); return; }
+  try{
+    const { error } = await sb.from('nail_state')
+      .upsert({ owner_id: cloudUser.id, data: DB }, { onConflict:'owner_id' });
+    if(error) throw error;
+    DB._syncedAt = DB._localTs;
+    setSync('ok');
+  }catch(e){ setSync('warn'); }
+}
+async function pullRemote(){
+  if(!sb || !cloudUser){ setSync('warn'); return; }
+  try{
+    const { data, error } = await sb.from('nail_state')
+      .select('data,updated_at').eq('owner_id', cloudUser.id).maybeSingle();
+    if(error) throw error;
+    if(data && data.data && Object.keys(data.data).length){
+      const remote = data.data;
+      const remoteTs = remote._localTs || new Date(data.updated_at).getTime();
+      // On garde la version la plus récente entre cet appareil et le cloud.
+      if(remoteTs > (DB._localTs||0)){
+        DB = Object.assign(structuredClone(defaultDB), remote);
+        save(true);                 // persiste en local, sans re-pousser
+      } else if((DB._localTs||0) > remoteTs){
+        await pushRemote();         // le local est plus frais → on l'envoie
+      }
+    } else {
+      await pushRemote();           // aucune ligne distante → on crée la première
+    }
+    setSync('ok');
+  }catch(e){ setSync('warn'); }
+}
+
+/* ---------- Connexion / compte ---------- */
+function showLogin(){ const g=document.getElementById('login-gate'); g.classList.remove('hidden'); g.classList.add('flex'); }
+function hideLogin(){ const g=document.getElementById('login-gate'); g.classList.add('hidden'); g.classList.remove('flex'); }
+async function doLogin(){
+  const email = document.getElementById('login-email').value.trim();
+  const pw = document.getElementById('login-pw').value;
+  const err = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+  err.classList.add('hidden');
+  if(!email || !pw){ err.textContent='Entre ton email et ton mot de passe 💕'; err.classList.remove('hidden'); return; }
+  if(!sb){ err.textContent='Connexion au serveur impossible pour l\'instant.'; err.classList.remove('hidden'); return; }
+  btn.textContent='⏳ Connexion…'; btn.disabled=true;
+  try{
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+    if(error) throw error;
+    cloudUser = data.user;
+    hideLogin();
+    pinkConfetti();
+    toast('💖 Coucou '+ (email.split('@')[0]) +' !');
+    await pullRemote();
+    renderTab();
+  }catch(e){
+    err.textContent = 'Email ou mot de passe incorrect 🥺';
+    err.classList.remove('hidden');
+  }finally{ btn.textContent='💖 Me connecter'; btn.disabled=false; }
+}
+function accountMenu(){
+  openModal(`
+    <div class="text-center">
+      <div class="text-4xl mb-2">💅</div>
+      <h3 class="font-cute font-bold text-lg" style="color:var(--accent-d)">Mon compte</h3>
+      <p class="text-xs mt-1" style="color:var(--accent)">${cloudUser? cloudUser.email : 'Non connectée'}</p>
+      <div class="mt-4 space-y-2">
+        <button onclick="closeModal(); pullRemote(); toast('☁️ Synchro…')" class="btn-soft w-full py-2.5 text-sm">🔄 Resynchroniser maintenant</button>
+        ${cloudUser? `<button onclick="doLogout()" class="btn-primary w-full py-2.5 text-sm">⎋ Me déconnecter</button>` : ''}
+      </div>
+      <p class="text-[10px] text-gray-400 mt-4">Tes données sont privées et synchronisées sur tes appareils 🔒</p>
+    </div>`);
+}
+async function doLogout(){
+  try{ if(sb) await sb.auth.signOut(); }catch(e){}
+  cloudUser = null; closeModal(); setSync('off'); showLogin();
+}
+
+/* ================================================================
+   DÉMARRAGE
+   ================================================================ */
+window.addEventListener('DOMContentLoaded', async ()=>{
   lucide.createIcons();
-  switchTab('studio');
-  // petit mot de bienvenue au premier lancement
+  switchTab('studio');                 // rend l'appli tout de suite (cache local)
+  setSync('off');
+  initCloud();
+  if(sb){
+    try{
+      const { data } = await sb.auth.getSession();
+      if(data && data.session){
+        cloudUser = data.session.user;   // session déjà en mémoire (marche hors-ligne)
+        await pullRemote();
+        renderTab();
+      } else {
+        showLogin();                     // jamais connectée sur cet appareil
+      }
+      // Écoute les changements d'auth (rafraîchissement de jeton, etc.)
+      sb.auth.onAuthStateChange((_e, session)=>{ cloudUser = session ? session.user : null; });
+    }catch(e){ showLogin(); }
+  } else {
+    // Librairie cloud indisponible : l'appli reste utilisable en local seul.
+    setSync('warn');
+  }
+  // petit mot de bienvenue au premier lancement local
   if(!DB.gels.length && !DB.carnet.length){
-    setTimeout(()=>{ toast('🎀 Bienvenue dans ton atelier, ma belle !'); pinkConfetti(); }, 600);
+    setTimeout(()=>{ toast('🎀 Bienvenue dans ton atelier, ma belle !'); pinkConfetti(); }, 800);
   }
 });
 </script>
