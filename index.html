@@ -254,13 +254,19 @@
     <div class="text-5xl mb-2">💅🎀</div>
     <h2 class="font-cute font-bold text-2xl" style="color:var(--accent-d)">Mon Atelier Nail Art</h2>
     <p class="text-xs mb-5" style="color:var(--accent)">Connecte-toi pour retrouver ton carnet 💕</p>
-    <div class="space-y-3 text-left">
-      <div><label>Email</label><input id="login-email" type="email" autocomplete="username" placeholder="ton email"></div>
-      <div><label>Mot de passe</label><input id="login-pw" type="password" autocomplete="current-password" placeholder="••••••••"></div>
-      <div id="login-error" class="text-xs text-red-500 font-semibold hidden"></div>
-      <button id="login-btn" onclick="doLogin()" class="btn-primary w-full py-3 mt-1">💖 Me connecter</button>
+    <div class="text-left mt-2">
+      <div class="mb-4">
+        <label class="!mb-2 !text-[13px]">Email</label>
+        <input id="login-email" type="email" autocomplete="username" placeholder="ton email" class="!py-3.5">
+      </div>
+      <div class="mb-2">
+        <label class="!mb-2 !text-[13px]">Mot de passe</label>
+        <input id="login-pw" type="password" autocomplete="current-password" placeholder="••••••••" class="!py-3.5">
+      </div>
+      <div id="login-error" class="text-xs text-red-500 font-semibold hidden mb-1 mt-1"></div>
+      <button id="login-btn" onclick="doLogin()" class="btn-primary w-full py-3.5 mt-5">💖 Me connecter</button>
     </div>
-    <p class="text-[10px] text-gray-400 mt-4">Ton compte est créé pour toi — pas d'inscription ici.</p>
+    <p class="text-[10px] text-gray-400 mt-5 leading-relaxed">Ton compte est créé pour toi — pas d'inscription ici.</p>
   </div>
 </div>
 
@@ -1376,7 +1382,11 @@ async function doLogin(){
     await pullRemote();
     renderTab();
   }catch(e){
-    err.textContent = 'Email ou mot de passe incorrect 🥺';
+    const m = (e && e.message || '').toLowerCase();
+    if(m.includes('not confirmed'))      err.textContent = "Ton compte n'est pas encore confirmé 🥺 (à activer côté Supabase)";
+    else if(m.includes('invalid'))       err.textContent = 'Email ou mot de passe incorrect 🥺';
+    else if(m.includes('network')||m.includes('fetch')) err.textContent = 'Pas de connexion internet 📶';
+    else                                 err.textContent = 'Connexion impossible : ' + (e && e.message || 'erreur');
     err.classList.remove('hidden');
   }finally{ btn.textContent='💖 Me connecter'; btn.disabled=false; }
 }
