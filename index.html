@@ -642,11 +642,17 @@ function handSVG(side){
     C178 74 177 126 179 176 C181 185 188 185 190 176
     C191 142 191 110 193 102 C194 88 209 88 215 102 C218 114 219 150 219 190
     C220 248 217 322 197 348 C187 362 120 372 92 360 Z`;
-  // ombrage doux de la paume + sillons entre les doigts (réalisme)
-  const shade = `<path d="M62 252 C92 264 150 262 198 248 C208 300 190 344 140 350 C96 354 68 318 62 252 Z" fill="#8a5a48" opacity=".12"/>
-    <g stroke="#b5806c" stroke-width="2.5" stroke-linecap="round" opacity=".35" fill="none">
-      <path d="M104 176 L106 200"/><path d="M144 176 L146 200"/><path d="M184 182 L186 204"/>
-    </g>`;
+  // ===== OMBRAGE 3D (volume) : reflets clairs au centre des doigts, ombres sur les côtés + plis =====
+  const F = [ [80,66,168], [124,46,170], [163,64,174], [203,102,180] ]; // [cx, tipY, jointure]
+  const hi = F.map(([cx,tip,kn])=>{ const cy=(tip+kn)/2+2, ry=(kn-tip)/2-4; return `<ellipse cx="${cx-4}" cy="${cy}" rx="5.5" ry="${ry}" fill="#fff" opacity=".3"/>`; }).join('');
+  const dk = F.map(([cx,tip,kn])=>{ const cy=(tip+kn)/2+4, ry=(kn-tip)/2-2; return `<ellipse cx="${cx+10}" cy="${cy}" rx="6" ry="${ry}" fill="#a05e46" opacity=".3"/>`; }).join('');
+  const web = `<g fill="#77402f" opacity=".38"><ellipse cx="103" cy="178" rx="8.5" ry="16"/><ellipse cx="144" cy="180" rx="8.5" ry="16"/><ellipse cx="184" cy="184" rx="8.5" ry="16"/></g>`;
+  const joints = `<g stroke="#a5624a" stroke-width="2" stroke-linecap="round" opacity=".25" fill="none"><path d="M70 120 h20"/><path d="M114 100 h20"/><path d="M154 118 h20"/><path d="M194 150 h18"/></g>`;
+  const edge = `<path d="M210 118 C222 170 222 300 196 346 C214 300 214 190 200 150 Z" fill="#8a4e39" opacity=".22"/>`; // ombre du bord droit (volume)
+  const palmSh = `<path d="M120 250 C168 262 206 250 214 250 C214 320 190 356 140 352 C150 320 152 282 120 250 Z" fill="#9c5b45" opacity=".22"/>`;
+  const palmHi = `<ellipse cx="116" cy="272" rx="58" ry="44" fill="#fff" opacity=".16"/>`;
+  const thumbHi = `<ellipse cx="34" cy="256" rx="15" ry="7" fill="#fff" opacity=".22" transform="rotate(-18 34 256)"/>`;
+  const shade = `<g filter="url(#soft${side})" clip-path="url(#clip${side})">${palmSh}${palmHi}${edge}${hi}${dk}${web}${thumbHi}</g>${joints}`;
   // ongles aux bouts des 4 doigts (calés sur les bouts du contour)
   const nailsAt = [ [1,82,60,26], [2,124,36,29], [3,163,50,27], [4,203,92,23] ];
   const nails = nailsAt.map(([idx,cx,tipY,w])=> nailShapeOnFinger(idx, cx, tipY, w, side)).join('');
@@ -657,6 +663,8 @@ function handSVG(side){
     <defs>
       <linearGradient id="skin${side}" x1="0" y1="0" x2="0.35" y2="1"><stop offset="0" stop-color="${SKIN.s}"/><stop offset="1" stop-color="${SKIN.d}"/></linearGradient>
       <linearGradient id="gloss${side}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity=".28"/></linearGradient>
+      <filter id="soft${side}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="4.5"/></filter>
+      <clipPath id="clip${side}"><path d="${outline}"/></clipPath>
     </defs>
     <g ${mirror}>
       <path d="${outline}" fill="url(#skin${side})" stroke="${SKIN.line}" stroke-width="1.4" stroke-linejoin="round"/>
