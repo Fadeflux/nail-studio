@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>💅 Mon Atelier Nail Art 🎀</title>
+
+<!-- ===== PWA / Add to Home Screen ===== -->
+<meta name="theme-color" content="#FF7EB9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Nail Studio">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23FF7EB9'/%3E%3Ctext x='50' y='68' font-size='60' text-anchor='middle'%3E%F0%9F%92%85%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%85%3C/text%3E%3C/svg%3E">
+
+<!-- ===== Librairies CDN ===== -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+<!-- ===== Polices ===== -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@400;500;600;700&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+
+<script>
+  // Configuration Tailwind : polices coquettes + palette rose
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          cute: ['Fredoka', 'sans-serif'],
+          body: ['Quicksand', 'sans-serif'],
+          script: ['"Dancing Script"', 'cursive'],
+        },
+      }
+    }
+  }
+</script>
+
+<style>
+  /* ============================================================
+     BASE & THÈMES PAR ONGLET (ambiance de rose unique)
+     ============================================================ */
+  :root{
+    --rose-bonbon:#FF7EB9;
+    --rose-fonce:#E84E8A;
+    --fuchsia:#FF3E9A;
+    --rose-gold:#E7A9A0;
+    --creme:#FFF5F8;
+    --shadow-rose:rgba(255,126,185,.35);
+  }
+  *{ -webkit-tap-highlight-color: transparent; }
+  html,body{ overscroll-behavior-y: none; }
+  body{
+    font-family:'Quicksand',sans-serif;
+    background:var(--creme);
+    color:#5a3d4d;
+    padding-bottom: env(safe-area-inset-bottom);
+    transition: background .5s ease;
+  }
+  h1,h2,h3,.font-cute{ font-family:'Fredoka',sans-serif; }
+
+  /* --- Ambiances de fond par onglet --- */
+  body[data-theme="studio"]  { background: linear-gradient(160deg,#FFF5F8 0%, #FFE9F2 100%); }
+  body[data-theme="stock"]   { background: linear-gradient(160deg,#FFF0F7 0%, #FCE1FF 100%); }
+  body[data-theme="scan"]    { background: linear-gradient(160deg,#FFEFFA 0%, #EAF3FF 100%); }
+  body[data-theme="carnet"]  { background: linear-gradient(160deg,#FFF3EF 0%, #FFE7EE 100%); }
+  body[data-theme="tuto"]    { background: linear-gradient(160deg,#FFEDF6 0%, #FFDDEF 100%); }
+  body[data-theme="plans"]   { background: linear-gradient(160deg,#FFF4F0 0%, #F9E6D9 100%); }
+
+  /* Couleur d'accent qui change selon l'onglet */
+  body[data-theme="studio"]  { --accent:#FF7EB9; --accent-d:#E84E8A; }
+  body[data-theme="stock"]   { --accent:#FF3E9A; --accent-d:#D62580; }
+  body[data-theme="scan"]    { --accent:#FF6FD8; --accent-d:#C94FE0; }
+  body[data-theme="carnet"]  { --accent:#F7A399; --accent-d:#E27C6E; }
+  body[data-theme="tuto"]    { --accent:#FF5FA2; --accent-d:#E43E85; }
+  body[data-theme="plans"]   { --accent:#E0A46A; --accent-d:#C67C3E; }
+
+  /* ============================================================
+     COMPOSANTS MIGNONS
+     ============================================================ */
+  .card{
+    background:rgba(255,255,255,.75);
+    backdrop-filter: blur(8px);
+    border:2px solid rgba(255,255,255,.9);
+    border-radius:1.75rem;
+    box-shadow:0 8px 24px var(--shadow-rose);
+  }
+  .card-heart-border{
+    border:2px solid var(--accent);
+    box-shadow:0 6px 18px var(--shadow-rose);
+  }
+  .btn-primary{
+    background:linear-gradient(135deg,var(--accent),var(--accent-d));
+    color:#fff; border-radius:9999px; font-weight:600;
+    box-shadow:0 6px 16px var(--shadow-rose);
+    transition:transform .12s ease, box-shadow .2s ease;
+  }
+  .btn-primary:active{ transform:scale(.94); }
+  .btn-soft{
+    background:#fff; color:var(--accent-d);
+    border:2px solid var(--accent); border-radius:9999px; font-weight:600;
+    transition:transform .12s ease;
+  }
+  .btn-soft:active{ transform:scale(.94); }
+  .chip{
+    border-radius:9999px; padding:.4rem .85rem; font-weight:600; font-size:.8rem;
+    border:2px solid transparent; cursor:pointer; transition:all .15s ease;
+    background:#fff; color:#a06;
+  }
+  .chip.active{ background:var(--accent); color:#fff; border-color:var(--accent-d); box-shadow:0 4px 10px var(--shadow-rose); }
+  .badge-pastel{
+    background:linear-gradient(135deg,#FFE3F1,#FFD1E8);
+    color:#c23; border-radius:9999px; padding:.15rem .6rem; font-size:.7rem; font-weight:700;
+  }
+  input,select,textarea{
+    font-family:'Quicksand',sans-serif;
+    background:#fff; border:2px solid #FFD6E8; border-radius:1rem;
+    padding:.6rem .9rem; width:100%; color:#5a3d4d; outline:none;
+    transition:border-color .2s;
+  }
+  input:focus,select:focus,textarea:focus{ border-color:var(--accent); }
+  label{ font-size:.78rem; font-weight:600; color:#a4708a; margin-bottom:.2rem; display:block; }
+
+  /* Nav du bas */
+  .nav-btn{ transition:transform .15s ease, color .2s ease; color:#c799b0; }
+  .nav-btn.active{ color:var(--accent-d); transform:translateY(-4px) scale(1.12); }
+  .nav-btn.active .nav-dot{ opacity:1; transform:scale(1); }
+  .nav-dot{ opacity:0; transform:scale(0); transition:all .2s; }
+
+  /* Étincelles décoratives */
+  .sparkle{ position:absolute; pointer-events:none; animation: twinkle 2.5s infinite ease-in-out; }
+  @keyframes twinkle{ 0%,100%{opacity:.3; transform:scale(.8) rotate(0);} 50%{opacity:1; transform:scale(1.15) rotate(20deg);} }
+
+  /* Cœur qui bat (chrono) */
+  @keyframes heartbeat{ 0%,100%{transform:scale(1);} 25%{transform:scale(1.18);} 40%{transform:scale(1);} 60%{transform:scale(1.12);} }
+  .heartbeat{ animation:heartbeat 1s infinite; }
+
+  /* Effet holographique (onglet scan) */
+  .holo{
+    background:linear-gradient(115deg,#ffd6f5,#d6f0ff,#e8d6ff,#ffe0f0,#d6fff0);
+    background-size:300% 300%;
+    animation:holoShift 6s ease infinite;
+  }
+  @keyframes holoShift{ 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+
+  /* Polaroid (carnet) */
+  .polaroid{
+    background:#fff; padding:.6rem .6rem 2.2rem; border-radius:.4rem;
+    box-shadow:0 8px 20px rgba(0,0,0,.12); transform:rotate(-2deg);
+    transition:transform .2s;
+  }
+  .polaroid:nth-child(even){ transform:rotate(1.5deg); }
+  .polaroid:active{ transform:rotate(0) scale(1.02); }
+
+  /* Roulette étoiles */
+  @keyframes starRain{ 0%{transform:translateY(-20px) rotate(0); opacity:1;} 100%{transform:translateY(120vh) rotate(360deg); opacity:0;} }
+  .star-drop{ position:fixed; top:-30px; z-index:80; pointer-events:none; animation:starRain linear forwards; }
+
+  /* Apparition douce des vues */
+  .view-enter{ animation:fadeUp .35s ease; }
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:translateY(0);} }
+
+  /* Toast */
+  #toast{ transition:opacity .3s, transform .3s; }
+
+  /* Ongle SVG : dégradé de brillance appliqué par-dessus la couleur */
+  .nail-gloss{ mix-blend-mode:screen; }
+
+  /* Scroll horizontal sans barre */
+  .no-scrollbar::-webkit-scrollbar{ display:none; }
+  .no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
+
+  /* Petite pastille cœur brisé (péremption) */
+  .pulse-alert{ animation:pulseAlert 1.4s infinite; }
+  @keyframes pulseAlert{ 0%,100%{opacity:1;} 50%{opacity:.45;} }
+</style>
+</head>
+
+<body data-theme="studio">
+
+<!-- ================= EN-TÊTE ================= -->
+<header class="sticky top-0 z-40 px-4 pt-3 pb-2" style="backdrop-filter:blur(10px); background:rgba(255,245,248,.7);">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-xl font-cute font-bold" style="color:var(--accent-d)">
+        <span id="header-emoji">💅</span> <span id="header-title">Studio Créatif</span>
+      </h1>
+      <p class="text-[11px] font-script" style="color:var(--accent)" id="header-sub">Ton atelier rien qu'à toi 🎀</p>
+    </div>
+    <button id="wakelock-btn" onclick="toggleWakeLock()" class="btn-soft px-3 py-2 text-xs flex items-center gap-1">
+      <i data-lucide="moon" class="w-4 h-4"></i><span id="wakelock-label">Veille</span>
+    </button>
+  </div>
+</header>
+
+<!-- ================= CONTENU ================= -->
+<main id="app" class="px-4 pb-28 pt-1 max-w-md mx-auto"></main>
+
+<!-- ================= NAV DU BAS ================= -->
+<nav class="fixed bottom-0 left-0 right-0 z-40 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]"
+     style="background:rgba(255,255,255,.85); backdrop-filter:blur(14px); border-top:2px solid #FFE0EF; border-radius:1.5rem 1.5rem 0 0; box-shadow:0 -6px 20px var(--shadow-rose);">
+  <div class="flex justify-between max-w-md mx-auto">
+    <button class="nav-btn flex flex-col items-center gap-0.5 flex-1 py-1" data-tab="studio" onclick="switchTab('studio')">
+      <i data-lucide="palette" class="w-5 h-5"></i><span class="text-[9px] font-semibold">Studio</span>
+      <span class="nav-dot w-1 h-1 rounded-full bg-current"></span>
+    </button>
+    <button class="nav-btn flex flex-col items-center gap-0.5 flex-1 py-1" data-tab="stock" onclick="switchTab('stock')">
+      <i data-lucide="sparkles" class="w-5 h-5"></i><span class="text-[9px] font-semibold">Stock</span>
+      <span class="nav-dot w-1 h-1 rounded-full bg-current"></span>
+    </button>
+    <button class="nav-btn flex flex-col items-center gap-0.5 flex-1 py-1" data-tab="scan" onclick="switchTab('scan')">
+      <i data-lucide="scan-line" class="w-5 h-5"></i><span class="text-[9px] font-semibold">Scan</span>
+      <span class="nav-dot w-1 h-1 rounded-full bg-current"></span>
+    </button>
+    <button class="nav-btn flex flex-col items-center gap-0.5 flex-1 py-1" data-tab="carnet" onclick="switchTab('carnet')">
+      <i data-lucide="book-heart" class="w-5 h-5"></i><span class="text-[9px] font-semibold">Carnet</span>
+      <span class="nav-dot w-1 h-1 rounded-full bg-current"></span>
+    </button>
+    <button class="nav-btn flex flex-col items-center gap-0.5 flex-1 py-1" data-tab="tuto" onclick="switchTab('tuto')">
+      <i data-lucide="timer" class="w-5 h-5"></i><span class="text-[9px] font-semibold">Tutos</span>
+      <span class="nav-dot w-1 h-1 rounded-full bg-current"></span>
+    </button>
+    <button class="nav-btn flex flex-col items-center gap-0.5 flex-1 py-1" data-tab="plans" onclick="switchTab('plans')">
+      <i data-lucide="gift" class="w-5 h-5"></i><span class="text-[9px] font-semibold">Bons plans</span>
+      <span class="nav-dot w-1 h-1 rounded-full bg-current"></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ================= TOAST ================= -->
+<div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 opacity-0 pointer-events-none px-5 py-3 rounded-full text-white font-semibold text-sm shadow-lg"
+     style="background:linear-gradient(135deg,#FF7EB9,#E84E8A);"></div>
+
+<!-- ================= MODALE GÉNÉRIQUE ================= -->
+<div id="modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center p-3" style="background:rgba(200,120,160,.35); backdrop-filter:blur(4px);">
+  <div id="modal-box" class="card w-full max-w-md max-h-[88vh] overflow-y-auto no-scrollbar p-5 view-enter"></div>
+</div>
+
+<script>
+/* ================================================================
+   💅 MON ATELIER NAIL ART — logique complète
+   Tout est autonome, données persistées dans le LocalStorage.
+   ================================================================ */
+
+/* ---------- 1. PERSISTANCE ---------- */
+const DB_KEY = 'nailStudio_v1';
+const defaultDB = {
+  gels: [],
+  decors: [],
+  tools: { ponceuse:false, lampeUV:false, lampeLED:false, pinceauLiner:false, aimantCatEye:false, pousseCuticules:false, dustBrush:false, limes:false },
+  gelx: { L:{pouce:'',index:'',majeur:'',annulaire:'',auriculaire:''}, R:{pouce:'',index:'',majeur:'',annulaire:'',auriculaire:''} },
+  inspirations: [],
+  carnet: [],
+  promos: [],
+  pose: { technique:'Gainage', forme:'Amande', longueur:'Moyenne', style:'Clean Girl', finish:'glossy', mainNonDom:false, nails:['#FFDDE8','#FFDDE8','#FF7EB9','#FFDDE8','#FFDDE8'] },
+  settings: { subsSeed:0 }
+};
+let DB = load();
+function load(){
+  try{ const raw = localStorage.getItem(DB_KEY); if(!raw) return structuredClone(defaultDB);
+    return Object.assign(structuredClone(defaultDB), JSON.parse(raw));
+  }catch(e){ return structuredClone(defaultDB); }
+}
+function save(){ try{ localStorage.setItem(DB_KEY, JSON.stringify(DB)); }catch(e){ toast('⚠️ Sauvegarde impossible'); } }
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+
+/* ---------- 2. DICTIONNAIRE DE COULEURS (marque/réf -> HEX) ---------- */
+/* Correspondances approximatives des teintes populaires. La pipette photo complète le reste. */
+const COLOR_DICT = {
+  'victoria vynn 042':'#C86B7A', 'victoria vynn 218':'#F4C2C2', 'victoria vynn 002':'#F7E7E1',
+  'dnd 450':'#B76E79', 'dnd 425':'#E8B4B8', 'dnd 587':'#7B1E3B',
+  'opi bubble bath':'#F3D9DC', 'opi big apple red':'#B11226', 'opi mod about you':'#EFC3D3',
+  'essie ballet slippers':'#EAD3D1', 'essie fiji':'#F1C6CE',
+  'the gel bottle 001':'#F5DDE0', 'the gel bottle milkshake':'#F8E9E4',
+  'semilac 056':'#C74375', 'semilac 003':'#F6D9D1',
+  'kiara sky milk':'#FBEDE8', 'peggy sage nude':'#E6C6BE'
+};
+function guessHex(brand, ref){
+  const key = (brand+' '+ref).toLowerCase().trim().replace(/#/g,'').replace(/\s+/g,' ');
+  if(COLOR_DICT[key]) return COLOR_DICT[key];
+  // recherche partielle
+  for(const k in COLOR_DICT){ if(k && key.includes(k.split(' ').pop())) return COLOR_DICT[k]; }
+  return null;
+}
+
+const FINISHES = ['Laqué','Nude','Pailleté','Flash Réfléchissant','Cat Eye','Thermique','Mat'];
+const FINISH_EMOJI = { 'Laqué':'💅','Nude':'🤍','Pailleté':'✨','Flash Réfléchissant':'🔦','Cat Eye':'👁️','Thermique':'🌡️','Mat':'🌫️' };
+
+/* ---------- 3. UTILITAIRES UI ---------- */
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.opacity = '1'; t.style.transform = 'translate(-50%,-6px)';
+  clearTimeout(t._t);
+  t._t = setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translate(-50%,0)'; }, 2200);
+}
+function pinkConfetti(){
+  if(typeof confetti !== 'function') return;
+  confetti({ particleCount: 70, spread: 70, origin:{ y:.7 }, colors:['#FF7EB9','#FF3E9A','#FFD1E8','#FFB6D9','#ffffff'], scalar:.9 });
+}
+function heartBurst(){
+  if(typeof confetti !== 'function') return;
+  const heart = confetti.shapeFromText ? confetti.shapeFromText({ text:'💖', scalar:2 }) : undefined;
+  confetti({ particleCount:24, spread:60, origin:{y:.6}, shapes: heart?[heart]:undefined, scalar:2, colors:['#FF7EB9','#FF3E9A'] });
+}
+function starRain(){
+  const stars = ['⭐','✨','💫','🌟','💖'];
+  for(let i=0;i<26;i++){
+    const s = document.createElement('div');
+    s.className='star-drop';
+    s.textContent = stars[Math.floor(Math.random()*stars.length)];
+    s.style.left = Math.random()*100+'vw';
+    s.style.fontSize = (12+Math.random()*22)+'px';
+    s.style.animationDuration = (1.4+Math.random()*1.4)+'s';
+    s.style.animationDelay = (Math.random()*.5)+'s';
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(), 3200);
+  }
+}
+function openModal(html){
+  const m = document.getElementById('modal');
+  document.getElementById('modal-box').innerHTML = html;
+  m.classList.remove('hidden'); m.classList.add('flex');
+  lucide.createIcons();
+}
+function closeModal(){ const m=document.getElementById('modal'); m.classList.add('hidden'); m.classList.remove('flex'); }
+document.getElementById('modal').addEventListener('click', e=>{ if(e.target.id==='modal') closeModal(); });
+
+// Lecture d'un fichier image -> dataURL
+function readImage(file){
+  return new Promise((res,rej)=>{
+    if(!file) return rej();
+    const r = new FileReader();
+    r.onload = ()=>res(r.result); r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+/* ---------- 4. ANALYSE D'IMAGE (palette dominante) ---------- */
+/* Réduit l'image sur un canvas et regroupe les couleurs par cases (quantification simple). */
+function extractPalette(dataUrl, n=5){
+  return new Promise((resolve)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const c = document.createElement('canvas');
+      const w = c.width = 60, h = c.height = 60;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      const data = ctx.getImageData(0,0,w,h).data;
+      const buckets = {};
+      for(let i=0;i<data.length;i+=4){
+        const a = data[i+3]; if(a<125) continue;
+        // regroupe par pas de 32 pour créer des familles de couleurs
+        const r = Math.round(data[i]/32)*32;
+        const g = Math.round(data[i+1]/32)*32;
+        const b = Math.round(data[i+2]/32)*32;
+        const key = r+','+g+','+b;
+        buckets[key] = (buckets[key]||0)+1;
+      }
+      const sorted = Object.entries(buckets).sort((a,b)=>b[1]-a[1]).slice(0,n);
+      const hexes = sorted.map(([k])=>{
+        const [r,g,b]=k.split(',').map(Number);
+        return '#'+[r,g,b].map(x=>Math.min(255,x).toString(16).padStart(2,'0')).join('');
+      });
+      resolve(hexes.length?hexes:['#FF7EB9']);
+    };
+    img.onerror = ()=>resolve(['#FF7EB9']);
+    img.src = dataUrl;
+  });
+}
+// Distance couleur simple pour le color-matching
+function hexToRgb(h){ h=h.replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join(''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
+function colorDist(a,b){ const A=hexToRgb(a),B=hexToRgb(b); return Math.sqrt((A[0]-B[0])**2+(A[1]-B[1])**2+(A[2]-B[2])**2); }
+function closestGels(hex, k=2){
+  return DB.gels.filter(g=>g.hex).map(g=>({g, d:colorDist(hex,g.hex)})).sort((a,b)=>a.d-b.d).slice(0,k).map(x=>x.g);
+}
+// Détection de style d'après la teinte moyenne
+function detectStyle(palette){
+  const avg = palette.map(hexToRgb).reduce((a,c)=>[a[0]+c[0],a[1]+c[1],a[2]+c[2]],[0,0,0]).map(x=>x/palette.length);
+  const [r,g,b]=avg;
+  const bright = (r+g+b)/3;
+  if(bright>210) return 'Glazed / Clean Girl';
+  if(r>150 && b>150 && g<130) return 'Y2K / Barbie';
+  if(bright<90) return 'Marbre / Noir Chic';
+  if(r>150 && g>120 && b<110) return 'French / Pêche';
+  return 'Floral Pastel';
+}
+
+/* ---------- 5. DATES & PÉREMPTION ---------- */
+function monthsSince(dateStr){
+  if(!dateStr) return null;
+  const d = new Date(dateStr); if(isNaN(d)) return null;
+  const now = new Date();
+  return (now.getFullYear()-d.getFullYear())*12 + (now.getMonth()-d.getMonth());
+}
+function peremptionInfo(gel){
+  const m = monthsSince(gel.openDate);
+  if(m===null) return { label:'Pas de date', cls:'text-gray-400', icon:'', months:null };
+  if(m>=24) return { label:`Ouvert depuis ${m} mois 💔`, cls:'text-red-500 pulse-alert', icon:'💔', months:m };
+  if(m>=12) return { label:`Ouvert depuis ${m} mois 🥺`, cls:'text-orange-500', icon:'🥺', months:m };
+  return { label:`Ouvert depuis ${m} mois 💕`, cls:'text-green-500', icon:'💕', months:m };
+}
+
+/* ================================================================
+   6. GESTION DES ONGLETS
+   ================================================================ */
+const TABS = {
+  studio:{ emoji:'💅', title:'Studio Créatif', sub:'Compose ta pose de rêve 🎀' },
+  stock:{  emoji:'✨', title:'Mon Stock', sub:'Tes gels, décors & alertes 💖' },
+  scan:{   emoji:'📸', title:'Scanner Inspi', sub:'TikTok · Pinterest holographique' },
+  carnet:{ emoji:'📔', title:'Mon Carnet', sub:'Souvenirs & Story Cards vintage' },
+  tuto:{   emoji:'⏱️', title:'Tutos & Chrono', sub:'Guides pas-à-pas Barbiecore' },
+  plans:{  emoji:'🎁', title:'Bons Plans', sub:'Shops & codes promo rose gold' },
+};
+let currentTab = 'studio';
+function switchTab(tab){
+  currentTab = tab;
+  document.body.dataset.theme = tab;
+  document.getElementById('header-emoji').textContent = TABS[tab].emoji;
+  document.getElementById('header-title').textContent = TABS[tab].title;
+  document.getElementById('header-sub').textContent = TABS[tab].sub;
+  document.querySelectorAll('.nav-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab===tab));
+  renderTab();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function renderTab(){
+  const app = document.getElementById('app');
+  app.classList.remove('view-enter'); void app.offsetWidth; app.classList.add('view-enter');
+  ({ studio:renderStudio, stock:renderStock, scan:renderScan, carnet:renderCarnet, tuto:renderTuto, plans:renderPlans })[currentTab]();
+  lucide.createIcons();
+}
+
+/* ================================================================
+   ONGLET 1 — STUDIO CRÉATIF (Visualiseur de main)
+   ================================================================ */
+const OPTIONS = {
+  technique:['Gainage','Capsules Gel-X','Popits / Dual Forms','Semi-permanent'],
+  forme:['Amande','Carré','Carré arrondi','Coffin / Ballerine','Stiletto','Ovale'],
+  longueur:['Courte','Moyenne','Longue','XL'],
+  style:['Clean Girl','Glazed','Y2K','Marbre','French revisitée','Floral','Chrome']
+};
+const FINGERS = ['Pouce','Index','Majeur','Annulaire','Auriculaire'];
+
+// Génère le SVG d'un ongle selon la forme, la longueur et la finition
+function nailSVG(color, forme, longueur, finish, idx){
+  const lenMap = { 'Courte':70,'Moyenne':95,'Longue':120,'XL':145 };
+  const H = lenMap[longueur]||95;
+  const W = 46;
+  const gid = 'g'+idx+'_'+Math.random().toString(36).slice(2,6);
+  // Chemin de l'ongle selon la forme (tip)
+  let tip;
+  switch(forme){
+    case 'Carré': tip = `L${W} ${H*0.2} L${W} ${H} L0 ${H} L0 ${H*0.2}`; break;
+    case 'Carré arrondi': tip = `L${W} ${H*0.2} L${W} ${H-14} Q${W} ${H} ${W-14} ${H} L14 ${H} Q0 ${H} 0 ${H-14} L0 ${H*0.2}`; break;
+    case 'Coffin / Ballerine': tip = `L${W} ${H*0.2} L${W-8} ${H-10} Q${W-8} ${H} ${W-16} ${H} L16 ${H} Q8 ${H} 8 ${H-10} L0 ${H*0.2}`; break;
+    case 'Stiletto': tip = `L${W} ${H*0.2} L${W/2+3} ${H} L${W/2-3} ${H} L0 ${H*0.2}`; break;
+    case 'Ovale': tip = `L${W} ${H*0.2} L${W} ${H-26} Q${W} ${H} ${W/2} ${H} Q0 ${H} 0 ${H-26} L0 ${H*0.2}`; break;
+    default: /* Amande */ tip = `L${W} ${H*0.2} L${W-4} ${H-30} Q${W/2} ${H} ${W/2} ${H} Q${4} ${H-30} 0 ${H*0.2}`;
+  }
+  const path = `M0 ${H*0.2} Q${W/2} -6 ${W} ${H*0.2} ${tip} Z`;
+
+  // Finition
+  let overlay = '';
+  if(finish==='glossy'){
+    overlay = `<path d="${path}" fill="url(#${gid}gloss)" class="nail-gloss"/>`;
+  } else if(finish==='glitter'){
+    let dots=''; for(let i=0;i<14;i++){ dots+=`<circle cx="${6+Math.random()*(W-12)}" cy="${H*0.25+Math.random()*(H*0.7)}" r="${.8+Math.random()*1.4}" fill="#fff" opacity="${.5+Math.random()*.5}"/>`; }
+    overlay = dots;
+  } // mat = pas d'overlay brillant
+
+  return `<svg viewBox="-4 -10 ${W+8} ${H+12}" style="width:100%;height:100%;filter:drop-shadow(0 3px 5px rgba(200,80,140,.35))">
+    <defs>
+      <linearGradient id="${gid}gloss" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#ffffff" stop-opacity=".7"/>
+        <stop offset="0.4" stop-color="#ffffff" stop-opacity="0"/>
+        <stop offset="1" stop-color="#ffffff" stop-opacity=".25"/>
+      </linearGradient>
+    </defs>
+    <path d="${path}" fill="${color}" stroke="rgba(255,255,255,.6)" stroke-width="1.5"/>
+    ${finish==='mat'?`<path d="${path}" fill="#000" opacity=".05"/>`:''}
+    ${overlay}
+  </svg>`;
+}
+
+function renderStudio(){
+  const p = DB.pose;
+  const app = document.getElementById('app');
+
+  const fingerScale = [0.72, 0.9, 1, 0.92, 0.7]; // hauteur relative des doigts
+  const nailsHtml = p.nails.map((c,i)=>`
+    <button onclick="pickNailColor(${i})" class="flex flex-col items-center justify-end" style="height:170px;width:19%">
+      <div style="height:${fingerScale[i]*100}%;width:100%;max-width:44px" class="flex items-end">
+        ${nailSVG(c, p.forme, p.longueur, p.finish, i)}
+      </div>
+      <span class="text-[8px] mt-1 font-semibold" style="color:var(--accent-d)">${FINGERS[i]}</span>
+    </button>`).join('');
+
+  const filterGroup = (label,key)=>`
+    <div class="mb-3">
+      <label>${label}</label>
+      <div class="flex flex-wrap gap-1.5">
+        ${OPTIONS[key].map(o=>`<span class="chip ${p[key]===o?'active':''}" onclick="setPose('${key}','${o.replace(/'/g,"\\'")}')">${o}</span>`).join('')}
+      </div>
+    </div>`;
+
+  app.innerHTML = `
+    <!-- Visualiseur de main -->
+    <div class="card p-4 mb-4 relative overflow-hidden">
+      <div class="sparkle" style="top:8px;right:14px">✨</div>
+      <div class="sparkle" style="bottom:10px;left:10px;animation-delay:1s">💖</div>
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="font-cute font-bold text-lg" style="color:var(--accent-d)">Ta main 🖐️</h2>
+        <span class="badge-pastel">${p.mainNonDom?'Main non-dominante':'Main dominante'}</span>
+      </div>
+      <div class="flex justify-center items-end gap-1 px-2">${nailsHtml}</div>
+      <p class="text-center text-[11px] mt-2" style="color:var(--accent)">👆 Touche un ongle pour changer sa couleur</p>
+
+      <!-- Toggle finition -->
+      <div class="flex gap-2 mt-3 justify-center">
+        ${[['glossy','Glossy miroir','✨'],['mat','Mat velours','🌫️'],['glitter','Top pailleté','💫']]
+          .map(([v,l,e])=>`<button onclick="setFinish('${v}')" class="chip ${p.finish===v?'active':''}">${e} ${l}</button>`).join('')}
+      </div>
+      <label class="flex items-center gap-2 justify-center mt-3 text-xs cursor-pointer" style="color:var(--accent-d)">
+        <input type="checkbox" style="width:auto" ${p.mainNonDom?'checked':''} onchange="toggleNonDom(this.checked)">
+        Simplifier pour la main non-dominante 🤲
+      </label>
+    </div>
+
+    <!-- Filtres de pose -->
+    <div class="card p-4 mb-4">
+      <h3 class="font-cute font-bold mb-3" style="color:var(--accent-d)">🎨 Compose ta pose</h3>
+      ${filterGroup('Technique','technique')}
+      ${filterGroup('Forme','forme')}
+      ${filterGroup('Longueur','longueur')}
+      ${filterGroup('Style','style')}
+    </div>
+
+    <!-- Palette rapide depuis le stock -->
+    <div class="card p-4 mb-4">
+      <h3 class="font-cute font-bold mb-2" style="color:var(--accent-d)">💅 Mes gels (touche pour teindre l'ongle sélectionné)</h3>
+      ${DB.gels.length? `<div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+          ${DB.gels.map(g=>`<button onclick="applyGelToSelected('${g.hex||'#FF7EB9'}')" class="flex flex-col items-center flex-shrink-0">
+            <span class="w-9 h-9 rounded-full border-2 border-white shadow" style="background:${g.hex||'#FF7EB9'}"></span>
+            <span class="text-[8px] mt-0.5 max-w-[54px] truncate">${g.brand}</span></button>`).join('')}
+        </div>` : `<p class="text-xs text-gray-400">Ajoute des gels dans l'onglet Stock ✨</p>`}
+      <div class="mt-2 text-[11px] text-gray-400">Ongle sélectionné : <b id="sel-nail-label" style="color:var(--accent-d)">${FINGERS[selectedNail]}</b></div>
+    </div>
+
+    <!-- Moteur de génération -->
+    <div class="grid grid-cols-2 gap-3 mb-2">
+      <button onclick="createPose()" class="btn-soft py-3 flex items-center justify-center gap-1 text-sm">
+        <i data-lucide="wand-2" class="w-4 h-4"></i> Créer ma pose
+      </button>
+      <button onclick="surpriseMe()" class="btn-primary py-3 flex items-center justify-center gap-1 text-sm">
+        <i data-lucide="dices" class="w-4 h-4"></i> Surprends-moi !
+      </button>
+    </div>
+    <div id="texture-alert" class="text-center text-xs"></div>
+  `;
+  checkTextureCompat();
+}
+
+let selectedNail = 2; // ongle sélectionné pour teinture
+function setPose(key,val){ DB.pose[key]=val; save(); renderTab(); }
+function setFinish(v){ DB.pose.finish=v; save(); renderTab(); }
+function toggleNonDom(v){
+  DB.pose.mainNonDom = v;
+  if(v){ // simplifie : une seule couleur d'accent, reste nude
+    const accent = DB.pose.nails[2];
+    DB.pose.nails = DB.pose.nails.map((c,i)=> i===3?accent:'#FFE3EF');
+    toast('🤲 Design simplifié pour la main opposée');
+  }
+  save(); renderTab();
+}
+function pickNailColor(i){
+  selectedNail = i;
+  const lbl = document.getElementById('sel-nail-label'); if(lbl) lbl.textContent = FINGERS[i];
+  // petit sélecteur de couleur natif
+  const inp = document.createElement('input'); inp.type='color'; inp.value = DB.pose.nails[i];
+  inp.oninput = e=>{ DB.pose.nails[i]=e.target.value; };
+  inp.onchange = e=>{ DB.pose.nails[i]=e.target.value; save(); renderTab(); };
+  inp.click();
+}
+function applyGelToSelected(hex){ DB.pose.nails[selectedNail]=hex; save(); pinkConfetti(); renderTab(); }
+function createPose(){
+  save(); pinkConfetti(); heartBurst();
+  toast('💖 Pose enregistrée dans le visualiseur');
+  checkTextureCompat();
+}
+function surpriseMe(){
+  starRain();
+  // Puise dans le stock si dispo, sinon palette rose harmonieuse
+  const pool = DB.gels.filter(g=>g.hex).map(g=>g.hex);
+  const base = pool.length>=2 ? pool : ['#FFDDE8','#FFB6D9','#FF7EB9','#FF9EC8','#E84E8A','#FCE1FF'];
+  const shuffled = [...base].sort(()=>Math.random()-.5);
+  DB.pose.nails = Array.from({length:5}, (_,i)=> shuffled[i%shuffled.length]);
+  DB.pose.forme = OPTIONS.forme[Math.floor(Math.random()*OPTIONS.forme.length)];
+  DB.pose.style = OPTIONS.style[Math.floor(Math.random()*OPTIONS.style.length)];
+  DB.pose.finish = ['glossy','mat','glitter'][Math.floor(Math.random()*3)];
+  save();
+  setTimeout(()=>{ pinkConfetti(); renderTab(); toast('🎲 Tadaaa ! Ta pose surprise ✨'); }, 400);
+}
+// Contrôle de compatibilité des textures
+function checkTextureCompat(){
+  const el = document.getElementById('texture-alert'); if(!el) return;
+  const p = DB.pose;
+  let warn = '';
+  if(p.finish==='glitter' && p.technique==='Semi-permanent')
+    warn = '⚠️ Un top pailleté épais sur semi-permanent tient moins : prévois un top coat solide 💅';
+  if(p.style==='Chrome' && p.finish==='mat')
+    warn = '⚠️ Le chrome a besoin d\'une base glossy : le mat annule l\'effet miroir 🪞';
+  if(p.style==='Glazed' && p.finish==='mat')
+    warn = '⚠️ Le Glazed est brillant par nature : choisis plutôt Glossy 🥛';
+  el.innerHTML = warn ? `<div class="card-heart-border bg-white/70 rounded-2xl px-3 py-2 mt-2" style="color:#d62580">${warn}</div>` : '';
+}
+
+/* ================================================================
+   ONGLET 2 — MON STOCK & ALERTES
+   ================================================================ */
+let stockView = 'gels';
+function renderStock(){
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div class="flex gap-2 mb-4 overflow-x-auto no-scrollbar">
+      ${[['gels','💅 Mes Gels UV'],['decors','✨ Décors & Outils'],['gelx','🖐️ Tailles Gel-X']]
+        .map(([v,l])=>`<button onclick="setStockView('${v}')" class="chip flex-shrink-0 ${stockView===v?'active':''}">${l}</button>`).join('')}
+    </div>
+    <div id="stock-body"></div>`;
+  ({ gels:renderGels, decors:renderDecors, gelx:renderGelx })[stockView]();
+  lucide.createIcons();
+}
+function setStockView(v){ stockView=v; renderStock(); }
+
+function renderGels(){
+  const body = document.getElementById('stock-body');
+  const alerts = DB.gels.filter(g=>{ const m=monthsSince(g.openDate); return m!==null && m>=12; }).length;
+  body.innerHTML = `
+    ${alerts?`<div class="card-heart-border bg-white/70 rounded-2xl p-3 mb-3 text-sm flex items-center gap-2" style="color:#d62580">
+      <span class="text-lg">💔</span> ${alerts} gel(s) ouverts depuis longtemps, pense à vérifier leur texture !</div>`:''}
+    <button onclick="gelForm()" class="btn-primary w-full py-3 mb-4 flex items-center justify-center gap-2">
+      <i data-lucide="plus" class="w-4 h-4"></i> Ajouter un gel UV</button>
+    ${DB.gels.length? DB.gels.map(gelCard).join('') : emptyState('💅','Aucun gel pour l\'instant','Ajoute ta première couleur adorée !')}
+  `;
+  lucide.createIcons();
+}
+function gelCard(g){
+  const per = peremptionInfo(g);
+  return `<div class="card p-3 mb-3 flex items-center gap-3">
+    <span class="w-14 h-14 rounded-2xl border-2 border-white shadow flex-shrink-0" style="background:${g.hex||'#eee'}"></span>
+    <div class="flex-1 min-w-0">
+      <div class="font-cute font-bold truncate" style="color:var(--accent-d)">${g.brand} ${g.ref||''}</div>
+      <div class="flex flex-wrap gap-1 mt-1">
+        <span class="badge-pastel">${FINISH_EMOJI[g.finish]||''} ${g.finish}</span>
+        <span class="badge-pastel">${g.hex||'—'}</span>
+      </div>
+      <div class="text-[11px] mt-1 font-semibold ${per.cls}">${per.label}</div>
+    </div>
+    <div class="flex flex-col gap-1">
+      <button onclick="gelForm('${g.id}')" class="btn-soft w-8 h-8 flex items-center justify-center p-0"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+      <button onclick="delGel('${g.id}')" class="w-8 h-8 flex items-center justify-center rounded-full bg-white text-red-400 border-2 border-red-200"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+    </div>
+  </div>`;
+}
+function gelForm(id){
+  const g = id ? DB.gels.find(x=>x.id===id) : { brand:'',ref:'',hex:'',finish:'Laqué',openDate:'' };
+  openModal(`
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="font-cute font-bold text-lg" style="color:var(--accent-d)">${id?'Modifier':'Nouveau'} gel 💅</h3>
+      <button onclick="closeModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div class="space-y-3">
+      <div><label>Marque</label><input id="gf-brand" value="${g.brand||''}" placeholder="Victoria Vynn, DND, OPI…"></div>
+      <div><label>Référence</label><input id="gf-ref" value="${g.ref||''}" placeholder="#042, 450…"></div>
+      <div>
+        <label>Couleur (auto depuis marque+réf, ou pipette / choix manuel)</label>
+        <div class="flex gap-2 items-center">
+          <input type="color" id="gf-hex" value="${g.hex||'#FF7EB9'}" style="width:52px;height:44px;padding:2px">
+          <button onclick="autoHex()" class="btn-soft px-3 py-2 text-xs flex items-center gap-1"><i data-lucide="wand-2" class="w-3.5 h-3.5"></i> Auto</button>
+          <label class="btn-soft px-3 py-2 text-xs flex items-center gap-1 cursor-pointer mb-0">
+            <i data-lucide="pipette" class="w-3.5 h-3.5"></i> Photo
+            <input type="file" accept="image/*" class="hidden" onchange="pipetteFromPhoto(event)">
+          </label>
+        </div>
+        <canvas id="gf-canvas" class="hidden mt-2 rounded-xl border-2 border-pink-200 w-full" style="cursor:crosshair"></canvas>
+        <p id="gf-pip-hint" class="text-[11px] text-gray-400 hidden mt-1">👆 Touche la couleur voulue sur la photo</p>
+      </div>
+      <div>
+        <label>Finition</label>
+        <select id="gf-finish">${FINISHES.map(f=>`<option ${g.finish===f?'selected':''}>${f}</option>`).join('')}</select>
+      </div>
+      <div><label>Date d'ouverture (PAO)</label><input type="date" id="gf-date" value="${g.openDate||''}"></div>
+      <button onclick="saveGel('${id||''}')" class="btn-primary w-full py-3 mt-1">💖 Enregistrer</button>
+    </div>
+  `);
+}
+function autoHex(){
+  const brand = document.getElementById('gf-brand').value;
+  const ref = document.getElementById('gf-ref').value;
+  const hex = guessHex(brand, ref);
+  if(hex){ document.getElementById('gf-hex').value = hex; toast('🎨 Couleur trouvée : '+hex); }
+  else toast('🤔 Réf inconnue — utilise la pipette photo ✨');
+}
+async function pipetteFromPhoto(e){
+  const url = await readImage(e.target.files[0]).catch(()=>null); if(!url) return;
+  const cv = document.getElementById('gf-canvas'); const hint = document.getElementById('gf-pip-hint');
+  const img = new Image();
+  img.onload = ()=>{
+    const ratio = img.height/img.width; cv.width = 300; cv.height = 300*ratio;
+    cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+    cv.classList.remove('hidden'); hint.classList.remove('hidden');
+  };
+  img.src = url;
+  cv.onclick = ev=>{
+    const r = cv.getBoundingClientRect();
+    const x = (ev.clientX-r.left)*(cv.width/r.width);
+    const y = (ev.clientY-r.top)*(cv.height/r.height);
+    const d = cv.getContext('2d').getImageData(x,y,1,1).data;
+    const hex = '#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join('');
+    document.getElementById('gf-hex').value = hex;
+    toast('🎨 Couleur prélevée : '+hex);
+  };
+}
+function saveGel(id){
+  const gel = {
+    id: id||uid(),
+    brand: document.getElementById('gf-brand').value.trim()||'Sans nom',
+    ref: document.getElementById('gf-ref').value.trim(),
+    hex: document.getElementById('gf-hex').value,
+    finish: document.getElementById('gf-finish').value,
+    openDate: document.getElementById('gf-date').value
+  };
+  if(id){ const i=DB.gels.findIndex(x=>x.id===id); DB.gels[i]=gel; } else DB.gels.push(gel);
+  save(); closeModal(); pinkConfetti(); toast('💅 Gel enregistré !'); renderStock();
+}
+function delGel(id){ if(confirm('Supprimer ce gel ?')){ DB.gels=DB.gels.filter(g=>g.id!==id); save(); renderStock(); } }
+
+/* --- Décors & Outils --- */
+const DECOR_TYPES = ['Strass','Paillettes','Poudre chromée','Foils','Gel 3D','Stickers'];
+function renderDecors(){
+  const body = document.getElementById('stock-body');
+  const toolLabels = { ponceuse:'Ponceuse',lampeUV:'Lampe UV',lampeLED:'Lampe LED',pinceauLiner:'Pinceau liner',aimantCatEye:'Aimant Cat Eye',pousseCuticules:'Pousse-cuticules',dustBrush:'Dust brush',limes:'Limes' };
+  body.innerHTML = `
+    <button onclick="decorForm()" class="btn-primary w-full py-3 mb-4 flex items-center justify-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Ajouter un décor</button>
+    <div class="grid grid-cols-2 gap-3 mb-5">
+      ${DB.decors.length? DB.decors.map(d=>`
+        <div class="card p-3 relative">
+          <button onclick="delDecor('${d.id}')" class="absolute top-2 right-2 text-red-300"><i data-lucide="x" class="w-4 h-4"></i></button>
+          <div class="text-2xl">${({'Strass':'💎','Paillettes':'✨','Poudre chromée':'🪞','Foils':'🌈','Gel 3D':'🧁','Stickers':'🎀'})[d.type]||'💖'}</div>
+          <div class="font-cute font-bold text-sm mt-1" style="color:var(--accent-d)">${d.name}</div>
+          <span class="badge-pastel mt-1 inline-block">${d.type}${d.qty?' · '+d.qty:''}</span>
+        </div>`).join('') : `<div class="col-span-2">${emptyState('✨','Aucun décor','Strass, paillettes, foils…')}</div>`}
+    </div>
+    <div class="card p-4">
+      <h3 class="font-cute font-bold mb-3" style="color:var(--accent-d)">🧰 Mes outils possédés</h3>
+      <div class="grid grid-cols-2 gap-2">
+        ${Object.entries(toolLabels).map(([k,l])=>`
+          <label class="flex items-center gap-2 text-sm p-2 rounded-2xl cursor-pointer ${DB.tools[k]?'':'opacity-60'}" style="background:${DB.tools[k]?'rgba(255,126,185,.15)':'#fff'}">
+            <input type="checkbox" style="width:auto" ${DB.tools[k]?'checked':''} onchange="toggleTool('${k}',this.checked)">
+            ${DB.tools[k]?'💖':'🤍'} ${l}
+          </label>`).join('')}
+      </div>
+    </div>`;
+  lucide.createIcons();
+}
+function toggleTool(k,v){ DB.tools[k]=v; save(); }
+function decorForm(){
+  openModal(`
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="font-cute font-bold text-lg" style="color:var(--accent-d)">Nouveau décor ✨</h3>
+      <button onclick="closeModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div class="space-y-3">
+      <div><label>Nom</label><input id="df-name" placeholder="Strass AB, foil holo…"></div>
+      <div><label>Type</label><select id="df-type">${DECOR_TYPES.map(t=>`<option>${t}</option>`).join('')}</select></div>
+      <div><label>Quantité (optionnel)</label><input id="df-qty" placeholder="1 boîte, 5 pots…"></div>
+      <button onclick="saveDecor()" class="btn-primary w-full py-3">💖 Ajouter</button>
+    </div>`);
+}
+function saveDecor(){
+  const name = document.getElementById('df-name').value.trim(); if(!name) return toast('Donne un nom 💕');
+  DB.decors.push({ id:uid(), name, type:document.getElementById('df-type').value, qty:document.getElementById('df-qty').value.trim() });
+  save(); closeModal(); pinkConfetti(); renderStock();
+}
+function delDecor(id){ DB.decors=DB.decors.filter(d=>d.id!==id); save(); renderStock(); }
+
+/* --- Tailles Gel-X (mémo capsules par doigt, 2 mains) --- */
+function renderGelx(){
+  const body = document.getElementById('stock-body');
+  const hand = (side,label)=>`
+    <div class="card p-4 mb-4">
+      <h3 class="font-cute font-bold mb-3 flex items-center gap-2" style="color:var(--accent-d)">🖐️ Main ${label}</h3>
+      <div class="grid grid-cols-5 gap-2">
+        ${['pouce','index','majeur','annulaire','auriculaire'].map(f=>`
+          <div class="flex flex-col items-center">
+            <span class="text-[9px] font-semibold mb-1" style="color:var(--accent)">${f.slice(0,4)}</span>
+            <input value="${DB.gelx[side][f]||''}" onchange="setGelx('${side}','${f}',this.value)" placeholder="#" class="text-center px-1" style="padding:.4rem 0">
+          </div>`).join('')}
+      </div>
+    </div>`;
+  body.innerHTML = `
+    <p class="text-xs mb-3 px-1" style="color:var(--accent-d)">📏 Note la taille de capsule idéale pour chaque doigt — tu gagnes un temps fou à la prochaine pose !</p>
+    ${hand('L','gauche')}
+    ${hand('R','droite')}`;
+}
+function setGelx(side,finger,val){ DB.gelx[side][finger]=val.trim(); save(); toast('📏 Taille enregistrée'); }
+
+/* ================================================================
+   ONGLET 3 — SCANNER TIKTOK / PINTEREST
+   ================================================================ */
+function renderScan(){
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div class="holo rounded-3xl p-4 mb-4 shadow-lg border-2 border-white/60">
+      <h2 class="font-cute font-bold text-lg mb-1" style="color:#c94fe0">📸 Analyse ton inspi</h2>
+      <p class="text-xs mb-3" style="color:#b03fb0">Colle un lien TikTok / Pinterest ou importe une capture — je te sors la palette et les gels de ton stock les plus proches ✨</p>
+      <div class="flex gap-2 mb-2">
+        <input id="scan-url" placeholder="https://tiktok.com/… ou pinterest.com/…">
+        <button onclick="scanUrl()" class="btn-primary px-4 flex-shrink-0"><i data-lucide="link" class="w-4 h-4"></i></button>
+      </div>
+      <label class="btn-soft w-full py-3 flex items-center justify-center gap-2 cursor-pointer mb-0">
+        <i data-lucide="image-plus" class="w-4 h-4"></i> Importer une capture d'écran
+        <input type="file" accept="image/*" class="hidden" onchange="scanImage(event)">
+      </label>
+    </div>
+    <div id="scan-result"></div>
+    <h3 class="font-cute font-bold mt-5 mb-2" style="color:#c94fe0">💾 Mes inspirations sauvées</h3>
+    <div id="scan-saved" class="grid grid-cols-2 gap-3"></div>
+  `;
+  renderSavedInspi();
+  lucide.createIcons();
+}
+async function scanImage(e){
+  const url = await readImage(e.target.files[0]).catch(()=>null); if(!url) return;
+  toast('🔮 Analyse en cours…');
+  const palette = await extractPalette(url);
+  showScanResult({ img:url, palette });
+}
+function scanUrl(){
+  const url = document.getElementById('scan-url').value.trim();
+  if(!url) return toast('Colle un lien 💕');
+  // On ne peut pas récupérer l'image d'un lien TikTok/Pinterest côté navigateur (CORS).
+  // On propose donc une palette « tendance » et on invite à importer la capture pour l'analyse réelle.
+  const trend = [['#F7D9D3','#E8B4B8','#C86B7A','#7B1E3B'],['#FCE1FF','#FF9EC8','#FF3E9A','#C94FE0'],['#E8F0FF','#D6C7FF','#B6D9FF','#FFFFFF']][Math.floor(Math.random()*3)];
+  showScanResult({ url, palette:trend, note:'🔗 Astuce : importe une capture d\'écran du lien pour une analyse exacte des couleurs.' });
+}
+function showScanResult(data){
+  const style = detectStyle(data.palette);
+  const box = document.getElementById('scan-result');
+  const matches = data.palette.map(hex=>({ hex, gels:closestGels(hex,1) }));
+  box.innerHTML = `
+    <div class="card p-4 mb-3 view-enter">
+      ${data.img?`<img src="${data.img}" class="w-full rounded-2xl mb-3 border-2 border-white shadow">`:''}
+      ${data.note?`<p class="text-[11px] mb-2 text-purple-500">${data.note}</p>`:''}
+      <div class="flex items-center justify-between mb-2">
+        <span class="badge-pastel">Style détecté : ${style}</span>
+      </div>
+      <label>Palette dominante</label>
+      <div class="flex gap-2 mb-3">${data.palette.map(h=>`<div class="flex-1 h-12 rounded-xl border-2 border-white shadow" style="background:${h}" title="${h}"></div>`).join('')}</div>
+      <label>💅 Gels de ton stock les plus proches</label>
+      <div class="space-y-2 mt-1">
+        ${matches.map(m=>`<div class="flex items-center gap-2 text-xs">
+          <span class="w-6 h-6 rounded-full border-2 border-white shadow" style="background:${m.hex}"></span>
+          <i data-lucide="arrow-right" class="w-3 h-3 text-pink-300"></i>
+          ${m.gels.length?`<span class="w-6 h-6 rounded-full border-2 border-white shadow" style="background:${m.gels[0].hex}"></span>
+            <b style="color:var(--accent-d)">${m.gels[0].brand} ${m.gels[0].ref||''}</b>`:'<span class="text-gray-400">Aucun gel proche dans le stock 🥺</span>'}
+        </div>`).join('')}
+      </div>
+      <button onclick='saveInspi(${JSON.stringify(data).replace(/'/g,"&#39;")}, "${style}")' class="btn-primary w-full py-2.5 mt-3 text-sm">💾 Sauver cette inspi</button>
+    </div>`;
+  lucide.createIcons(); pinkConfetti();
+}
+function saveInspi(data, style){
+  DB.inspirations.unshift({ id:uid(), img:data.img||null, url:data.url||null, palette:data.palette, style, date:new Date().toISOString() });
+  save(); toast('💾 Inspiration sauvée !'); renderSavedInspi();
+}
+function renderSavedInspi(){
+  const box = document.getElementById('scan-saved'); if(!box) return;
+  box.innerHTML = DB.inspirations.length ? DB.inspirations.map(i=>`
+    <div class="card p-2 relative">
+      <button onclick="delInspi('${i.id}')" class="absolute top-1 right-1 bg-white/80 rounded-full p-0.5 text-red-400 z-10"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+      ${i.img?`<img src="${i.img}" class="w-full h-24 object-cover rounded-xl mb-1">`:`<div class="w-full h-24 rounded-xl mb-1 flex gap-0.5 overflow-hidden">${i.palette.map(h=>`<div class="flex-1" style="background:${h}"></div>`).join('')}</div>`}
+      <span class="badge-pastel text-[9px]">${i.style}</span>
+    </div>`).join('') : `<div class="col-span-2">${emptyState('🔮','Aucune inspi sauvée','Analyse ta première capture !')}</div>`;
+  lucide.createIcons();
+}
+function delInspi(id){ DB.inspirations=DB.inspirations.filter(x=>x.id!==id); save(); renderSavedInspi(); }
+
+/* ================================================================
+   ONGLET 4 — MON CARNET & STORY CARD
+   ================================================================ */
+function renderCarnet(){
+  const app = document.getElementById('app');
+  // Prochain remplissage : à partir de la dernière pose (J+21)
+  let nextFill = '';
+  if(DB.carnet.length){
+    const last = [...DB.carnet].sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
+    const d = new Date(last.date); d.setDate(d.getDate()+21);
+    const days = Math.ceil((d-new Date())/86400000);
+    nextFill = `<div class="card-heart-border bg-white/70 rounded-2xl p-3 mb-4 flex items-center gap-3">
+      <span class="text-2xl">🗓️</span>
+      <div class="text-sm">
+        <b style="color:var(--accent-d)">Prochain remplissage estimé</b><br>
+        <span style="color:var(--accent)">${d.toLocaleDateString('fr-FR')} · ${days>0?`dans ${days} jour(s) 💕`:'c\'est le moment ! 💅'}</span>
+      </div></div>`;
+  }
+  app.innerHTML = `
+    ${nextFill}
+    <button onclick="carnetForm()" class="btn-primary w-full py-3 mb-4 flex items-center justify-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Nouvelle fiche souvenir</button>
+    <div class="grid grid-cols-2 gap-3">
+      ${DB.carnet.length? [...DB.carnet].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(carnetCard).join('') : `<div class="col-span-2">${emptyState('📔','Ton carnet est vide','Immortalise ta première pose 💖')}</div>`}
+    </div>`;
+  lucide.createIcons();
+}
+function carnetCard(c){
+  return `<div class="polaroid">
+    ${c.photo?`<img src="${c.photo}" class="w-full h-32 object-cover rounded-sm">`:`<div class="w-full h-32 rounded-sm flex items-center justify-center text-4xl" style="background:linear-gradient(135deg,#FFE3F1,#FFD1E8)">💅</div>`}
+    <div class="absolute" style="top:6px;right:8px">💕</div>
+    <div class="mt-1 px-0.5">
+      <div class="font-script text-lg leading-tight" style="color:var(--accent-d)">${c.title||'Ma pose'}</div>
+      <div class="text-[10px] text-gray-500">${new Date(c.date).toLocaleDateString('fr-FR')}</div>
+      <div class="text-[11px]">${'⭐'.repeat(c.rating||0)}</div>
+      ${c.wear?`<div class="text-[10px]" style="color:var(--accent)">Tenue : ${c.wear} sem.</div>`:''}
+      <div class="flex gap-1 mt-1">
+        <button onclick="storyCard('${c.id}')" class="btn-primary text-[9px] px-2 py-1 flex-1">🎀 Story</button>
+        <button onclick="delCarnet('${c.id}')" class="text-red-300 px-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+      </div>
+    </div>
+  </div>`;
+}
+let carnetPhotoTmp = null;
+function carnetForm(){
+  carnetPhotoTmp = null;
+  openModal(`
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="font-cute font-bold text-lg" style="color:var(--accent-d)">Fiche souvenir 📔</h3>
+      <button onclick="closeModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div class="space-y-3">
+      <label class="btn-soft w-full py-6 flex flex-col items-center justify-center gap-1 cursor-pointer mb-0" id="cf-photo-lbl">
+        <i data-lucide="camera" class="w-6 h-6"></i><span class="text-xs">Ajouter la photo de tes ongles</span>
+        <input type="file" accept="image/*" class="hidden" onchange="carnetPhoto(event)">
+      </label>
+      <div><label>Titre du design</label><input id="cf-title" placeholder="French rose glazed 💅"></div>
+      <div><label>Date de pose</label><input type="date" id="cf-date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div><label>Produits utilisés</label><textarea id="cf-products" rows="2" placeholder="Victoria Vynn #042, top glossy, strass AB…"></textarea></div>
+      <div><label>Note (1 à 5 ⭐)</label>
+        <div class="flex gap-2" id="cf-stars">${[1,2,3,4,5].map(n=>`<button type="button" onclick="setStars(${n})" data-n="${n}" class="text-2xl opacity-30">⭐</button>`).join('')}</div>
+      </div>
+      <div><label>Tenue (semaines)</label><input type="number" id="cf-wear" min="0" max="8" placeholder="3"></div>
+      <button onclick="saveCarnet()" class="btn-primary w-full py-3">💖 Enregistrer le souvenir</button>
+    </div>`);
+}
+let carnetStars = 0;
+function setStars(n){ carnetStars=n; document.querySelectorAll('#cf-stars button').forEach(b=> b.style.opacity = (+b.dataset.n<=n)?'1':'.3'); }
+async function carnetPhoto(e){
+  carnetPhotoTmp = await readImage(e.target.files[0]).catch(()=>null);
+  if(carnetPhotoTmp){ document.getElementById('cf-photo-lbl').innerHTML = `<img src="${carnetPhotoTmp}" class="w-full h-28 object-cover rounded-xl">`; }
+}
+function saveCarnet(){
+  DB.carnet.push({
+    id:uid(), photo:carnetPhotoTmp,
+    title:document.getElementById('cf-title').value.trim(),
+    date:document.getElementById('cf-date').value||new Date().toISOString().slice(0,10),
+    products:document.getElementById('cf-products').value.trim(),
+    rating:carnetStars, wear:document.getElementById('cf-wear').value,
+    palette:[...DB.pose.nails]
+  });
+  save(); closeModal(); pinkConfetti(); heartBurst(); carnetStars=0; toast('📔 Souvenir enregistré !'); renderCarnet();
+}
+function delCarnet(id){ if(confirm('Supprimer cette fiche ?')){ DB.carnet=DB.carnet.filter(c=>c.id!==id); save(); renderCarnet(); } }
+
+// Génération de la Story Card (html2canvas)
+function storyCard(id){
+  const c = DB.carnet.find(x=>x.id===id); if(!c) return;
+  const pal = (c.palette&&c.palette.length?c.palette:DB.pose.nails);
+  openModal(`
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="font-cute font-bold text-lg" style="color:var(--accent-d)">Ta Story Card 🎀</h3>
+      <button onclick="closeModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div id="story-card" style="width:340px;margin:0 auto;background:linear-gradient(160deg,#FFF5F8,#FFE0EF);border-radius:28px;padding:22px;position:relative;box-shadow:0 10px 30px rgba(255,126,185,.4)">
+      <div style="position:absolute;top:12px;left:16px;font-size:22px">🎀</div>
+      <div style="position:absolute;top:12px;right:16px;font-size:22px">💖</div>
+      <div style="position:absolute;bottom:12px;left:16px;font-size:18px">✨</div>
+      <div style="position:absolute;bottom:12px;right:16px;font-size:18px">✨</div>
+      <div style="text-align:center;font-family:'Dancing Script',cursive;font-size:30px;color:#E84E8A;margin:6px 0 4px">${c.title||'Ma pose du jour'}</div>
+      <div style="text-align:center;font-size:12px;color:#c799b0;margin-bottom:12px">${new Date(c.date).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}</div>
+      ${c.photo?`<img src="${c.photo}" crossorigin="anonymous" style="width:100%;height:230px;object-fit:cover;border-radius:20px;border:4px solid #fff">`:`<div style="width:100%;height:230px;border-radius:20px;background:${pal[2]};display:flex;align-items:center;justify-content:center;font-size:64px">💅</div>`}
+      <div style="display:flex;gap:6px;justify-content:center;margin-top:14px">
+        ${pal.map(h=>`<div style="width:34px;height:34px;border-radius:50%;background:${h};border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.15)"></div>`).join('')}
+      </div>
+      <div style="text-align:center;margin-top:12px;font-size:16px">${'⭐'.repeat(c.rating||0)}</div>
+      ${c.wear?`<div style="text-align:center;font-size:12px;color:#E84E8A;margin-top:2px">Tenue : ${c.wear} semaines 💕</div>`:''}
+      <div style="text-align:center;margin-top:10px;font-family:'Fredoka',sans-serif;font-size:11px;color:#c799b0">💅 Mon Atelier Nail Art</div>
+    </div>
+    <button onclick="downloadStory()" class="btn-primary w-full py-3 mt-4 flex items-center justify-center gap-2"><i data-lucide="download" class="w-4 h-4"></i> Télécharger ma carte</button>
+    <p class="text-[10px] text-center text-gray-400 mt-1">Prête à partager sur Instagram / Pinterest ✨</p>
+  `);
+}
+function downloadStory(){
+  const node = document.getElementById('story-card');
+  toast('🎀 Création de ta carte…');
+  html2canvas(node, { backgroundColor:null, scale:3, useCORS:true }).then(canvas=>{
+    const a = document.createElement('a');
+    a.download = 'story-card-nailart.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+    pinkConfetti(); toast('💖 Carte téléchargée !');
+  }).catch(()=>toast('😢 Export impossible (photo externe ?)'));
+}
+
+/* ================================================================
+   ONGLET 5 — TUTOS & CHRONO UV
+   ================================================================ */
+const GUIDES = {
+  'Gainage':['Repousser les cuticules & limer la surface (grain doux)','Dépoussiérer + primer sans acide','Base fine polymérisée 60s','Gel de construction en 2 couches (catalyse 60s)','Limage de la forme + affinage','Couleur / nail art','Top coat + essuyer la couche collante 💅'],
+  'Capsules Gel-X':['Choisir la bonne taille de capsule (voir mémo Gel-X)','Préparer l\'ongle + déshydratant/primer','Encoller capsule + ongle (gel colle)','Poser à 45° et presser 10s + catalyse','Limer la longueur & la forme','Couleur / déco','Top coat brillant ✨'],
+  'Popits / Dual Forms':['Préparer l\'ongle naturel','Remplir le chausson (dual form) de gel','Appliquer sur l\'ongle, presser, retirer l\'excédent','Catalyser 60s puis retirer le moule','Affiner la forme à la lime','Nail art','Finition top coat 💖'],
+  'Semi-permanent':['Repousser cuticules + limer légèrement','Dégraisser (cleaner)','Base 60s','2 couches de couleur (60s chacune)','Nail art éventuel','Top coat 60s + essuyage 🌸']
+};
+let timerInt=null, timerLeft=0, timerTotal=0;
+function renderTuto(){
+  const app = document.getElementById('app');
+  const g = GUIDES[DB.pose.technique] || GUIDES['Gainage'];
+  app.innerHTML = `
+    <!-- CHRONO UV -->
+    <div class="card p-5 mb-4 text-center relative overflow-hidden">
+      <div class="sparkle" style="top:10px;left:14px">✨</div>
+      <div class="sparkle" style="top:10px;right:14px;animation-delay:.8s">✨</div>
+      <h2 class="font-cute font-bold text-lg mb-1" style="color:var(--accent-d)">⏱️ Chrono UV</h2>
+      <div class="relative flex items-center justify-center my-3" style="height:150px">
+        <div id="timer-heart" class="text-[110px] leading-none select-none">💗</div>
+        <div id="timer-num" class="absolute font-cute font-bold text-3xl" style="color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.25)">0s</div>
+      </div>
+      <div class="flex gap-2 justify-center mb-3">
+        ${[30,60,90].map(s=>`<button onclick="startTimer(${s})" class="btn-primary px-5 py-3 text-base font-bold">${s}s</button>`).join('')}
+      </div>
+      <div class="flex gap-2 justify-center">
+        <button onclick="startTimer(60,true)" class="btn-soft px-4 py-2 text-xs">🌡️ 60s Low Heat</button>
+        <button onclick="stopTimer()" class="btn-soft px-4 py-2 text-xs">⏹️ Stop</button>
+      </div>
+    </div>
+
+    <!-- GUIDE PAS-À-PAS -->
+    <div class="card p-4 mb-4">
+      <h3 class="font-cute font-bold mb-1" style="color:var(--accent-d)">📋 Déroulé : ${DB.pose.technique}</h3>
+      <p class="text-[11px] mb-3" style="color:var(--accent)">Change de technique dans l'onglet Studio</p>
+      <ol class="space-y-2">
+        ${g.map((step,i)=>`<li class="flex items-start gap-2 text-sm">
+          <span class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style="background:var(--accent)">${i+1}</span>
+          <span>${step}</span></li>`).join('')}
+      </ol>
+    </div>
+
+    <!-- SCHÉMAS NAIL ART -->
+    <div class="card p-4 mb-4">
+      <h3 class="font-cute font-bold mb-3" style="color:var(--accent-d)">🎨 Nail art à main levée</h3>
+      <div class="grid grid-cols-3 gap-2">
+        ${[['🌸','Fleur 5 pétales','Point central + 5 pétales autour au liner'],['🤍','Cœur','2 gouttes côte à côte, tire une pointe en bas'],['🎀','Nœud','2 triangles pointe à pointe + carré au centre'],['🍒','Cerise','2 boules rouges + tige verte fine'],['✨','French inversée','Ligne fine à la base du croissant'],['🐆','Léopard','Taches ovales + petits arcs bruns autour']]
+          .map(([e,t,d])=>`<button onclick="toast('${d.replace(/'/g,"\\'")} 💅')" class="card-heart-border bg-white/60 rounded-2xl p-2 text-center">
+            <div class="text-2xl">${e}</div><div class="text-[9px] font-semibold mt-1" style="color:var(--accent-d)">${t}</div></button>`).join('')}
+      </div>
+    </div>
+
+    <!-- MÉMO PONCEUSE + SOS + DÉPOSE -->
+    <div class="grid grid-cols-1 gap-3">
+      <details class="card p-4">
+        <summary class="font-cute font-bold cursor-pointer" style="color:var(--accent-d)">🪅 Embouts de ponceuse & limes</summary>
+        <div class="text-sm mt-2 space-y-1">
+          <p>🔺 <b>Cône fin</b> : cuticules & contours</p>
+          <p>🛢️ <b>Cylindre (mandrin)</b> : dépose & rebulk</p>
+          <p>🟡 <b>Boule</b> : sous les cuticules, sillons latéraux</p>
+          <p>📏 <b>Lime 100/180</b> : forme & finition · 240 : surface douce</p>
+        </div>
+      </details>
+      <details class="card p-4">
+        <summary class="font-cute font-bold cursor-pointer" style="color:var(--accent-d)">🚑 SOS Ongle cassé</summary>
+        <div class="text-sm mt-2 space-y-1">
+          <p>1. Limer proprement la zone fragilisée</p>
+          <p>2. Réparation express : petit morceau de <b>sachet de thé / popit</b> collé au gel base</p>
+          <p>3. Catalyser, limer à ras, recouvrir de base + top</p>
+          <p>💕 En dépannage : colle à ongles + poudre de gainage</p>
+        </div>
+      </details>
+      <details class="card p-4">
+        <summary class="font-cute font-bold cursor-pointer" style="color:var(--accent-d)">🧼 Dépose sécurisée</summary>
+        <div class="text-sm mt-2 space-y-1">
+          <p>🌸 <b>Papillotes acétone</b> : limer le top, coton imbibé + alu 12-15 min, retirer en douceur</p>
+          <p>🪅 <b>Ponceuse</b> : mandrin grain moyen, effleurer sans chauffer, garder une fine couche</p>
+          <p>⚠️ Ne jamais <b>arracher</b> — hydrate à l'huile de cuticule après 💧</p>
+        </div>
+      </details>
+    </div>
+  `;
+  lucide.createIcons();
+}
+function startTimer(sec, lowHeat=false){
+  stopTimer();
+  timerTotal = timerLeft = sec;
+  const heart = document.getElementById('timer-heart');
+  heart.classList.add('heartbeat');
+  updateTimerUI();
+  if(lowHeat) toast('🌡️ Mode Low Heat : catalyse douce');
+  timerInt = setInterval(()=>{
+    timerLeft--; updateTimerUI();
+    if(timerLeft<=0){ finishTimer(); }
+  },1000);
+}
+function updateTimerUI(){
+  const num = document.getElementById('timer-num'); if(num) num.textContent = timerLeft+'s';
+  const heart = document.getElementById('timer-heart');
+  if(heart){ const scale = 1 + (1 - timerLeft/timerTotal)*0.15; heart.style.transform=`scale(${scale})`; }
+}
+function stopTimer(){
+  if(timerInt){ clearInterval(timerInt); timerInt=null; }
+  const heart = document.getElementById('timer-heart'); if(heart){ heart.classList.remove('heartbeat'); heart.style.transform='scale(1)'; }
+}
+function finishTimer(){
+  stopTimer();
+  const num = document.getElementById('timer-num'); if(num) num.textContent='✓';
+  playChime(); pinkConfetti(); heartBurst();
+  toast('💖 Catalyse terminée, ma belle !');
+}
+// Signal sonore doux généré (pas de fichier externe)
+function playChime(){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    [880,1108,1318].forEach((f,i)=>{
+      const o=ctx.createOscillator(), g=ctx.createGain();
+      o.type='sine'; o.frequency.value=f;
+      o.connect(g); g.connect(ctx.destination);
+      const t=ctx.currentTime+i*0.16;
+      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.25,t+0.03); g.gain.exponentialRampToValueAtTime(.001,t+0.5);
+      o.start(t); o.stop(t+0.5);
+    });
+  }catch(e){}
+}
+
+/* ================================================================
+   ONGLET 6 — BONS PLANS, SHOPS & CODES PROMO
+   ================================================================ */
+const SHOPS = {
+  'Gels & Matériel':[
+    {name:'Passione Beauty', url:'https://www.passionebeauty.fr', emoji:'💅'},
+    {name:'Ongle24', url:'https://www.ongle24.com', emoji:'💖'},
+    {name:'Victoria Vynn', url:'https://victoriavynn.com', emoji:'👑'},
+    {name:'Framenails', url:'https://framenails.fr', emoji:'🖼️'}
+  ],
+  'Décorations & Strass':[
+    {name:'Daily Charme', url:'https://www.dailycharme.com', emoji:'💎'},
+    {name:'Poudres Glazed', url:'https://www.dailycharme.com', emoji:'🪞'}
+  ],
+  'Soins & Huiles cuticules':[
+    {name:'CND SolarOil', url:'https://www.cnd.com', emoji:'💧'},
+    {name:'OPI ProSpa', url:'https://www.opi.com', emoji:'🧴'}
+  ]
+};
+function renderPlans(){
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <!-- ANNUAIRE SHOPS -->
+    ${Object.entries(SHOPS).map(([cat,shops])=>`
+      <div class="card p-4 mb-4">
+        <h3 class="font-cute font-bold mb-3 flex items-center gap-2" style="color:var(--accent-d)">🎀 ${cat}</h3>
+        <div class="grid grid-cols-2 gap-2">
+          ${shops.map(s=>`<a href="${s.url}" target="_blank" rel="noopener" class="card-heart-border bg-white/70 rounded-2xl p-3 flex items-center gap-2 text-sm">
+            <span class="text-xl">${s.emoji}</span>
+            <span class="font-semibold" style="color:var(--accent-d)">${s.name}</span>
+          </a>`).join('')}
+        </div>
+      </div>`).join('')}
+
+    <!-- CODES PROMO -->
+    <div class="card p-4 mb-4">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-cute font-bold flex items-center gap-2" style="color:var(--accent-d)">🎁 Mes codes promo</h3>
+        <button onclick="promoForm()" class="btn-primary px-3 py-1.5 text-xs flex items-center gap-1"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Ajouter</button>
+      </div>
+      ${DB.promos.length? DB.promos.map(promoCard).join('') : emptyState('🎀','Aucun code pour l\'instant','Ajoute les codes trouvés sur TikTok/Insta !')}
+    </div>
+  `;
+  lucide.createIcons();
+}
+function promoCard(p){
+  return `<div class="card-heart-border bg-white/80 rounded-2xl p-3 mb-2 flex items-center gap-3">
+    <div class="flex-1 min-w-0">
+      <div class="font-cute font-bold" style="color:var(--accent-d)">${p.shop}</div>
+      ${p.discount?`<span class="badge-pastel">✨ ${p.discount}</span>`:''}
+    </div>
+    <button onclick="copyPromo('${p.code.replace(/'/g,"\\'")}')" class="btn-primary px-3 py-2 text-sm font-mono flex items-center gap-1">
+      <i data-lucide="copy" class="w-3.5 h-3.5"></i> ${p.code}</button>
+    <button onclick="delPromo('${p.id}')" class="text-red-300"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+  </div>`;
+}
+function copyPromo(code){
+  const done = ()=>{
+    toast('🎀 Code copié : '+code);
+    // pluie de petits nœuds
+    for(let i=0;i<12;i++){ const b=document.createElement('div'); b.className='star-drop'; b.textContent='🎀';
+      b.style.left=Math.random()*100+'vw'; b.style.fontSize=(14+Math.random()*14)+'px';
+      b.style.animationDuration=(1.2+Math.random())+'s'; document.body.appendChild(b); setTimeout(()=>b.remove(),2600); }
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(code).then(done).catch(done); }
+  else { const t=document.createElement('textarea'); t.value=code; document.body.appendChild(t); t.select(); try{document.execCommand('copy');}catch(e){} t.remove(); done(); }
+}
+function promoForm(){
+  openModal(`
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="font-cute font-bold text-lg" style="color:var(--accent-d)">Nouveau code 🎁</h3>
+      <button onclick="closeModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div class="space-y-3">
+      <div><label>Boutique</label><input id="pf-shop" placeholder="Passione Beauty…"></div>
+      <div><label>Code</label><input id="pf-code" placeholder="ROSE10"></div>
+      <div><label>Réduction (optionnel)</label><input id="pf-disc" placeholder="-10%, -5€…"></div>
+      <button onclick="savePromo()" class="btn-primary w-full py-3">💖 Ajouter le code</button>
+    </div>`);
+}
+function savePromo(){
+  const shop=document.getElementById('pf-shop').value.trim(), code=document.getElementById('pf-code').value.trim();
+  if(!shop||!code) return toast('Remplis boutique + code 💕');
+  DB.promos.push({ id:uid(), shop, code, discount:document.getElementById('pf-disc').value.trim() });
+  save(); closeModal(); pinkConfetti(); renderPlans();
+}
+function delPromo(id){ DB.promos=DB.promos.filter(p=>p.id!==id); save(); renderPlans(); }
+
+/* ================================================================
+   ÉTAT VIDE GÉNÉRIQUE
+   ================================================================ */
+function emptyState(emoji,title,sub){
+  return `<div class="text-center py-8 px-4">
+    <div class="text-4xl mb-2">${emoji}</div>
+    <div class="font-cute font-bold" style="color:var(--accent-d)">${title}</div>
+    <div class="text-xs text-gray-400 mt-1">${sub}</div>
+  </div>`;
+}
+
+/* ================================================================
+   WAKE LOCK (Mode Écran Actif)
+   ================================================================ */
+let wakeLock = null;
+async function toggleWakeLock(){
+  const label = document.getElementById('wakelock-label');
+  if(wakeLock){ try{ await wakeLock.release(); }catch(e){} wakeLock=null; label.textContent='Veille'; toast('😴 Écran libre'); return; }
+  if(!('wakeLock' in navigator)) return toast('❌ Non supporté sur ce navigateur');
+  try{
+    wakeLock = await navigator.wakeLock.request('screen');
+    label.textContent='Actif ✨'; toast('☀️ Écran maintenu allumé pour ta séance !');
+    wakeLock.addEventListener('release', ()=>{ label.textContent='Veille'; });
+  }catch(e){ toast('❌ Impossible d\'activer'); }
+}
+// Réactive le wake lock si l'onglet redevient visible
+document.addEventListener('visibilitychange', async ()=>{
+  if(wakeLock!==null && document.visibilityState==='visible'){
+    try{ wakeLock = await navigator.wakeLock.request('screen'); }catch(e){}
+  }
+});
+
+/* ================================================================
+   DÉMARRAGE
+   ================================================================ */
+window.addEventListener('DOMContentLoaded', ()=>{
+  lucide.createIcons();
+  switchTab('studio');
+  // petit mot de bienvenue au premier lancement
+  if(!DB.gels.length && !DB.carnet.length){
+    setTimeout(()=>{ toast('🎀 Bienvenue dans ton atelier, ma belle !'); pinkConfetti(); }, 600);
+  }
+});
+</script>
+</body>
+</html>

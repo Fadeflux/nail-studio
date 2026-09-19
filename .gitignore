@@ -1,0 +1,8 @@
+# Rien de sensible à ignorer pour l'instant, mais on garde le garde-fou :
+.DS_Store
+Thumbs.db
+*.log
+node_modules/
+.env
+.env.*
+secrets*.txt
