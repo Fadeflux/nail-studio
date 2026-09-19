@@ -121,13 +121,16 @@
     color:#c23; border-radius:9999px; padding:.15rem .6rem; font-size:.7rem; font-weight:700;
   }
   input,select,textarea{
-    font-family:'Quicksand',sans-serif;
-    background:#fff; border:2px solid #FFD6E8; border-radius:1rem;
-    padding:.6rem .9rem; width:100%; color:#5a3d4d; outline:none;
-    transition:border-color .2s;
+    font-family:'Quicksand',sans-serif; font-size:15px; font-weight:500;
+    background:#fff; border:1.5px solid #F1C4D9; border-radius:.75rem;
+    padding:.72rem .95rem; width:100%; color:#5a3d4d; outline:none;
+    box-shadow: inset 0 1px 2px rgba(200,120,160,.07);
+    transition:border-color .18s, box-shadow .18s;
   }
-  input:focus,select:focus,textarea:focus{ border-color:var(--accent); }
-  label{ font-size:.78rem; font-weight:600; color:#a4708a; margin-bottom:.2rem; display:block; }
+  input::placeholder,textarea::placeholder{ color:#c69bb2; }
+  input:focus,select:focus,textarea:focus{ border-color:var(--accent); box-shadow:0 0 0 3px var(--shadow-rose); }
+  textarea{ resize:vertical; min-height:3rem; }
+  label{ font-size:.8rem; font-weight:700; color:#a4708a; margin-bottom:.35rem; display:block; letter-spacing:.2px; }
 
   /* Nav du bas */
   .nav-btn{ transition:transform .15s ease, color .2s ease; color:#c799b0; }
@@ -236,8 +239,9 @@
     .card{ background:rgba(48,26,40,.74); border-color:rgba(255,150,200,.14);
       box-shadow:0 10px 26px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06); }
     .card-heart-border{ background:rgba(48,26,40,.6); }
-    input,select,textarea{ background:#2c1826; color:#f6e2ec; border-color:#5a2f47; }
-    input::placeholder,textarea::placeholder{ color:#b98aa5; }
+    input,select,textarea{ background:#28131f; color:#f9e9f0; border-color:#743a58; box-shadow: inset 0 1px 3px rgba(0,0,0,.3); }
+    input::placeholder,textarea::placeholder{ color:#b487a1; }
+    input:focus,select:focus,textarea:focus{ border-color:var(--accent); box-shadow:0 0 0 3px var(--shadow-rose); }
     label{ color:#e6acc8; }
     .chip{ background:#2c1826; color:#ffb3d6; }
     .btn-soft{ background:#2c1826; color:#ff9ecb; }
@@ -600,50 +604,57 @@ const FINGERS = ['Pouce','Index','Majeur','Annulaire','Auriculaire'];
 // ============ VISUALISEUR : DEUX MAINS ============
 const SKIN = { s:'#F4CBBD', d:'#E3A794', line:'#C98B79' };
 
-// Un ongle posé au bout d'un doigt (forme + finition + couleur), cliquable
+// Un ongle posé au bout d'un doigt : bord libre (forme) EN HAUT, cuticule arrondie en bas
 function nailShapeOnFinger(idx, cx, tipY, w, side){
   const p = DB.pose;
-  const h = { 'Courte':18,'Moyenne':24,'Longue':32,'XL':40 }[p.longueur] || 24;
-  const nw = Math.max(13, w*0.66);
-  const x = cx - nw/2, y = tipY + 2, bx=x, ex=x+nw, mx=cx;
+  const h = { 'Courte':14,'Moyenne':19,'Longue':25,'XL':31 }[p.longueur] || 19;
+  const nw = Math.max(11, w*0.74);
+  const bx = cx - nw/2, ex = cx + nw/2, mx = cx;
+  const top = tipY + 3, bot = top + h;      // top = bord libre (bout du doigt), bot = cuticule
   const col = p.nails[idx] || '#FFDDE8';
-  let d;
+  const cr = Math.min(5, nw/2 - 1);
+  let topEdge;
   switch(p.forme){
-    case 'Carré':            d=`M${bx} ${y} L${ex} ${y} L${ex} ${y+h} L${bx} ${y+h} Z`; break;
-    case 'Stiletto':         d=`M${bx} ${y} L${ex} ${y} L${mx} ${y+h} Z`; break;
-    case 'Coffin / Ballerine': d=`M${bx} ${y} L${ex} ${y} L${(ex-nw*0.22).toFixed(1)} ${y+h} L${(bx+nw*0.22).toFixed(1)} ${y+h} Z`; break;
-    case 'Ovale':            d=`M${bx} ${y} L${ex} ${y} L${ex} ${(y+h*0.55).toFixed(1)} Q${ex} ${y+h} ${mx} ${y+h} Q${bx} ${y+h} ${bx} ${(y+h*0.55).toFixed(1)} Z`; break;
-    case 'Carré arrondi':    d=`M${bx} ${y} L${ex} ${y} L${ex} ${y+h-5} Q${ex} ${y+h} ${ex-5} ${y+h} L${bx+5} ${y+h} Q${bx} ${y+h} ${bx} ${y+h-5} Z`; break;
-    default: /* Amande */    d=`M${bx} ${y} L${ex} ${y} L${(ex-1).toFixed(1)} ${(y+h*0.5).toFixed(1)} Q${mx} ${y+h} ${mx} ${y+h} Q${(bx+1).toFixed(1)} ${(y+h*0.5).toFixed(1)} ${bx} ${y} Z`;
+    case 'Carré':              topEdge = `M${bx} ${top} L${ex} ${top}`; break;
+    case 'Carré arrondi':      topEdge = `M${bx} ${top+3} Q${bx} ${top} ${bx+3} ${top} L${ex-3} ${top} Q${ex} ${top} ${ex} ${top+3}`; break;
+    case 'Stiletto':           topEdge = `M${bx} ${(top+h*0.45).toFixed(1)} L${mx} ${(top-h*0.4).toFixed(1)} L${ex} ${(top+h*0.45).toFixed(1)}`; break;
+    case 'Coffin / Ballerine': topEdge = `M${bx} ${top+2} L${bx+2} ${top} L${ex-2} ${top} L${ex} ${top+2}`; break;
+    case 'Ovale':              topEdge = `M${bx} ${(top+h*0.32).toFixed(1)} Q${mx} ${(top-3).toFixed(1)} ${ex} ${(top+h*0.32).toFixed(1)}`; break;
+    default: /* Amande */      topEdge = `M${bx} ${(top+h*0.42).toFixed(1)} Q${mx} ${(top-h*0.22).toFixed(1)} ${ex} ${(top+h*0.42).toFixed(1)}`;
   }
+  const d = `${topEdge} L${ex} ${bot-cr} Q${ex} ${bot} ${ex-cr} ${bot} L${bx+cr} ${bot} Q${bx} ${bot} ${bx} ${bot-cr} Z`;
   let fx='';
   if(p.finish==='glossy') fx=`<path d="${d}" fill="url(#gloss${side})" style="mix-blend-mode:screen"/>`;
   else if(p.finish==='mat') fx=`<path d="${d}" fill="#000" opacity=".07"/>`;
-  else if(p.finish==='glitter'){ let s=idx*9301+49297; const rnd=()=>{s=(s*9301+49297)%233280;return s/233280;}; let dd=''; for(let i=0;i<8;i++){ dd+=`<circle cx="${(x+2+rnd()*(nw-4)).toFixed(1)}" cy="${(y+2+rnd()*(h-3)).toFixed(1)}" r="${(.6+rnd()*1).toFixed(2)}" fill="#fff" opacity="${(.5+rnd()*.5).toFixed(2)}"/>`; } fx=dd; }
-  return `<g onclick="pickNailColor(${idx})" style="cursor:pointer"><path d="${d}" fill="${col}" stroke="rgba(255,255,255,.75)" stroke-width="1.3"/>${fx}</g>`;
+  else if(p.finish==='glitter'){ let s=idx*9301+49297; const rnd=()=>{s=(s*9301+49297)%233280;return s/233280;}; let dd=''; for(let i=0;i<7;i++){ dd+=`<circle cx="${(bx+2+rnd()*(nw-4)).toFixed(1)}" cy="${(top+2+rnd()*(h-3)).toFixed(1)}" r="${(.6+rnd()*.9).toFixed(2)}" fill="#fff" opacity="${(.5+rnd()*.5).toFixed(2)}"/>`; } fx=dd; }
+  return `<g onclick="pickNailColor(${idx})" style="cursor:pointer"><path d="${d}" fill="${col}" stroke="rgba(255,255,255,.7)" stroke-width="1"/>${fx}</g>`;
 }
 
-// Une main complète (side 'L' ou 'R'), 5 doigts + ongles cliquables
+// Une main complète (side 'L' ou 'R') : doigts fuselés + pouce, paume par-dessus
 function handSVG(side){
-  const fingers = [ [1,78,92,30], [2,118,66,33], [3,158,84,31], [4,192,122,27] ]; // index, majeur, annulaire, auriculaire
-  const palmTop = 210;
-  const fg = fingers.map(([idx,cx,tipY,w])=>{
-    const half=w/2, r=half;
-    const path=`M${cx-half} ${palmTop} L${cx-half} ${tipY+r} Q${cx-half} ${tipY} ${cx} ${tipY} Q${cx+half} ${tipY} ${cx+half} ${tipY+r} L${cx+half} ${palmTop} Z`;
-    return `<path d="${path}" fill="url(#skin${side})" stroke="${SKIN.line}" stroke-width="1.1"/>` + nailShapeOnFinger(idx, cx, tipY, w, side);
-  }).join('');
-  const thumb = `<g transform="rotate(-40 60 232)">
-    <path d="M46 236 L46 176 Q46 158 62 158 Q78 158 78 176 L78 236 Z" fill="url(#skin${side})" stroke="${SKIN.line}" stroke-width="1.1"/>
-    ${nailShapeOnFinger(0, 62, 160, 30, side)}
+  // [idx, cx, tipY, largeurBout, largeurBase]
+  const fingers = [ [1,70,80,24,30], [2,114,54,27,33], [3,158,78,25,31], [4,196,116,21,27] ];
+  const baseY = 288;
+  let fg = '';
+  fingers.forEach(([idx,cx,tipY,wt,wb])=>{
+    const rt = wt/2;
+    const d = `M${cx-wb/2} ${baseY} L${cx-wt/2} ${tipY+rt} Q${cx-wt/2} ${tipY} ${cx} ${tipY} Q${cx+wt/2} ${tipY} ${cx+wt/2} ${tipY+rt} L${cx+wb/2} ${baseY} Z`;
+    fg += `<path d="${d}" fill="url(#skin${side})" stroke="${SKIN.line}" stroke-width="1"/>` + nailShapeOnFinger(idx, cx, tipY, wt, side);
+  });
+  // pouce fuselé, incliné, base plongée dans la paume
+  const thumb = `<g transform="rotate(-38 82 252)">
+    <path d="M62 256 L68 180 Q68 162 86 162 Q104 162 102 180 L96 256 Z" fill="url(#skin${side})" stroke="${SKIN.line}" stroke-width="1"/>
+    ${nailShapeOnFinger(0, 85, 164, 30, side)}
   </g>`;
-  const palm = `<path d="M48 205 Q34 250 56 288 Q86 314 128 310 Q188 306 202 266 Q212 232 196 200 Q150 214 120 210 Q84 214 48 205 Z" fill="url(#skin${side})" stroke="${SKIN.line}" stroke-width="1.1"/>`;
+  // paume dessinée EN DERNIER (par-dessus) : cache les bases → connexion nette
+  const palm = `<path d="M42 236 Q33 304 62 336 Q95 368 140 361 Q200 354 215 305 Q224 271 206 233 Q150 250 122 246 Q80 250 42 236 Z" fill="url(#skin${side})" stroke="${SKIN.line}" stroke-width="1"/>`;
   const mirror = side==='L' ? 'transform="translate(240,0) scale(-1,1)"' : '';
-  return `<svg viewBox="0 0 240 332" style="width:100%;height:auto;max-height:330px;filter:drop-shadow(0 8px 12px var(--shadow-rose))">
+  return `<svg viewBox="0 0 240 376" style="width:100%;height:auto;max-height:320px;filter:drop-shadow(0 8px 12px var(--shadow-rose))">
     <defs>
-      <linearGradient id="skin${side}" x1="0" y1="0" x2="0.25" y2="1"><stop offset="0" stop-color="${SKIN.s}"/><stop offset="1" stop-color="${SKIN.d}"/></linearGradient>
+      <linearGradient id="skin${side}" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="${SKIN.s}"/><stop offset="1" stop-color="${SKIN.d}"/></linearGradient>
       <linearGradient id="gloss${side}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity=".28"/></linearGradient>
     </defs>
-    <g ${mirror}>${palm}${thumb}${fg}</g>
+    <g ${mirror}>${fg}${thumb}${palm}</g>
   </svg>`;
 }
 
@@ -1259,16 +1270,38 @@ const NAILART_TIPS = {
 };
 function showNailArt(k){ const t=NAILART_TIPS[k]; if(t) openTipModal(t.e, k, t.steps); }
 
-// Embouts de ponceuse (à quoi sert chaque tête)
-const PONCEUSE_BITS = {
-  'Cône fin':{e:'🔺', steps:['Sert aux cuticules et aux contours','Vitesse BASSE, angle ~45°','Effleure sans appuyer, jamais sur la peau']},
-  'Mandrin cylindre':{e:'🛢️', steps:['Sert à la dépose et à dégrossir le gel','Grain moyen, mouvements de va-et-vient','Ne chauffe pas : ne reste pas au même endroit']},
-  'Boule':{e:'🔵', steps:['Sert sous les cuticules et dans les sillons','Toute petite boule, pression très légère','Jamais directement sur la peau']},
-  'Flamme':{e:'🔥', steps:['Nettoie le repli latéral de l\'ongle','Longe le sillon sans toucher la peau','Vitesse basse']},
-  'Meule silicone':{e:'🩰', steps:['Polit et lisse la surface','Prépare avant le top coat','Donne un fini satiné']},
-  'Limes 100/180/240':{e:'📏', steps:['100 : dessus & forme (gros grain)','180 : affiner la forme','240 : lisser la surface en douceur']},
+// Dessins des embouts (pour reconnaître la FORME, pas juste le nom)
+const shaft = '<rect x="28.5" y="40" width="7" height="22" rx="3" fill="#c2c2cc"/><rect x="30.5" y="40" width="2" height="22" fill="#e9e9f0"/>';
+const BIT_ART = {
+  'Cône fin':`<svg viewBox="0 0 64 66"><rect x="28.5" y="42" width="7" height="22" rx="3" fill="#c2c2cc"/><rect x="30.5" y="42" width="2" height="22" fill="#e9e9f0"/><path d="M32 6 L41 44 L23 44 Z" fill="#d98b6a" stroke="#a86a4d" stroke-width="1.3"/><path d="M32 6 L35.5 26 L28.5 26 Z" fill="#eab08e" opacity=".7"/></svg>`,
+  'Mandrin cylindre':`<svg viewBox="0 0 64 66"><rect x="28.5" y="44" width="7" height="20" rx="3" fill="#c2c2cc"/><rect x="30.5" y="44" width="2" height="20" fill="#e9e9f0"/><rect x="18" y="8" width="28" height="38" rx="7" fill="#cf8a6f" stroke="#a86a4d" stroke-width="1.3"/><g stroke="#9a5f45" stroke-width="1" opacity=".45"><line x1="20" y1="15" x2="44" y2="15"/><line x1="20" y1="22" x2="44" y2="22"/><line x1="20" y1="29" x2="44" y2="29"/><line x1="20" y1="36" x2="44" y2="36"/></g></svg>`,
+  'Boule':`<svg viewBox="0 0 64 66"><rect x="28.5" y="36" width="7" height="26" rx="3" fill="#c2c2cc"/><rect x="30.5" y="36" width="2" height="26" fill="#e9e9f0"/><circle cx="32" cy="22" r="16" fill="#cccdd8" stroke="#9a9aa6" stroke-width="1.3"/><circle cx="26" cy="16" r="5" fill="#fff" opacity=".55"/><g fill="#9a9aa6" opacity=".5"><circle cx="34" cy="20" r="1"/><circle cx="38" cy="26" r="1"/><circle cx="30" cy="30" r="1"/><circle cx="26" cy="26" r="1"/></g></svg>`,
+  'Flamme':`<svg viewBox="0 0 64 66"><rect x="28.5" y="42" width="7" height="22" rx="3" fill="#c2c2cc"/><rect x="30.5" y="42" width="2" height="22" fill="#e9e9f0"/><path d="M32 5 Q47 24 40 40 Q36 48 32 48 Q28 48 24 40 Q17 24 32 5 Z" fill="#cccdd8" stroke="#9a9aa6" stroke-width="1.3"/><path d="M31 12 Q40 24 35 36" fill="none" stroke="#fff" stroke-width="2.5" opacity=".45"/></svg>`,
+  'Meule silicone':`<svg viewBox="0 0 64 66"><rect x="28.5" y="46" width="7" height="18" rx="3" fill="#c2c2cc"/><rect x="30.5" y="46" width="2" height="18" fill="#e9e9f0"/><path d="M18 46 L18 26 Q18 8 32 8 Q46 8 46 26 L46 46 Z" fill="#f3a6c4" stroke="#d67aa0" stroke-width="1.3"/><path d="M24 42 L24 26 Q24 16 32 15" fill="none" stroke="#fff" stroke-width="3" opacity=".5"/></svg>`,
+  'Limes 100/180/240':`<svg viewBox="0 0 64 66"><g transform="rotate(-28 32 33)"><rect x="24" y="5" width="16" height="50" rx="7" fill="#eab7c6" stroke="#c98b9d" stroke-width="1.3"/><rect x="26" y="46" width="12" height="9" rx="3" fill="#d9d9e0" stroke="#b6b6c0" stroke-width="1"/><g fill="#b56d82" opacity=".45"><circle cx="30" cy="14" r="1.1"/><circle cx="35" cy="18" r="1.1"/><circle cx="29" cy="22" r="1.1"/><circle cx="34" cy="27" r="1.1"/><circle cx="30" cy="32" r="1.1"/><circle cx="35" cy="37" r="1.1"/></g></g></svg>`,
 };
-function showPonceuse(k){ const t=PONCEUSE_BITS[k]; if(t) openTipModal(t.e, k, t.steps); }
+const PONCEUSE_BITS = {
+  'Cône fin':{steps:['Sert aux cuticules et aux contours','Vitesse BASSE, angle ~45°','Effleure sans appuyer, jamais sur la peau']},
+  'Mandrin cylindre':{steps:['Sert à la dépose et à dégrossir le gel','Grain moyen, mouvements de va-et-vient','Ne chauffe pas : ne reste pas au même endroit']},
+  'Boule':{steps:['Sert sous les cuticules et dans les sillons','Toute petite boule, pression très légère','Jamais directement sur la peau']},
+  'Flamme':{steps:['Nettoie le repli latéral de l\'ongle','Longe le sillon sans toucher la peau','Vitesse basse']},
+  'Meule silicone':{steps:['Polit et lisse la surface','Prépare avant le top coat','Donne un fini satiné']},
+  'Limes 100/180/240':{steps:['100 : dessus & forme (gros grain)','180 : affiner la forme','240 : lisser la surface en douceur']},
+};
+function showPonceuse(k){
+  const t=PONCEUSE_BITS[k]; if(!t) return;
+  openModal(`
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="font-cute font-bold text-lg" style="color:var(--accent-d)">${k}</h3>
+      <button onclick="closeModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div class="flex justify-center mb-3"><div style="width:96px;height:96px">${BIT_ART[k]||''}</div></div>
+    <ol class="space-y-2">
+      ${t.steps.map((s,i)=>`<li class="flex items-start gap-2 text-sm"><span class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style="background:var(--accent)">${i+1}</span><span>${s}</span></li>`).join('')}
+    </ol>
+    <button onclick="closeModal()" class="btn-primary w-full py-3 mt-4">💖 J'ai compris</button>
+  `);
+}
 
 function renderTuto(){
   const app = document.getElementById('app');
@@ -1318,8 +1351,8 @@ function renderTuto(){
       <h3 class="font-cute font-bold mb-1" style="color:var(--accent-d)">🪅 Embouts de ponceuse & limes</h3>
       <p class="text-[11px] mb-3" style="color:var(--accent)">Touche un embout pour savoir à quoi il sert 🛠️</p>
       <div class="grid grid-cols-3 md:grid-cols-6 gap-2">
-        ${Object.entries(PONCEUSE_BITS).map(([k,t])=>`<button onclick="showPonceuse('${k.replace(/'/g,"\\'")}')" class="card-heart-border rounded-2xl p-2 text-center">
-          <div class="text-2xl">${t.e}</div><div class="text-[9px] font-semibold mt-1 leading-tight" style="color:var(--accent-d)">${k}</div></button>`).join('')}
+        ${Object.keys(PONCEUSE_BITS).map(k=>`<button onclick="showPonceuse('${k.replace(/'/g,"\\'")}')" class="card-heart-border rounded-2xl p-2 text-center flex flex-col items-center">
+          <div style="width:46px;height:46px">${BIT_ART[k]||''}</div><div class="text-[9px] font-semibold mt-1 leading-tight" style="color:var(--accent-d)">${k}</div></button>`).join('')}
       </div>
     </div>
 
