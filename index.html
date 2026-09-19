@@ -54,7 +54,7 @@
     --shadow-rose:rgba(255,126,185,.35);
   }
   *{ -webkit-tap-highlight-color: transparent; }
-  html,body{ overscroll-behavior-y: none; }
+  html,body{ overscroll-behavior-y: none; overflow-x: hidden; }  /* pas de barre horizontale (confettis/décor en vw) */
   body{
     font-family:'Quicksand',sans-serif;
     background:var(--creme);
@@ -198,6 +198,26 @@
   .nav-btn.active i{ filter: drop-shadow(0 3px 6px var(--shadow-rose)); }
   header{ border-bottom:1px solid rgba(255,126,185,.18); }
 
+  /* Survol souris (ordinateur) — n'affecte pas le tactile */
+  @media (hover:hover){
+    .btn-primary:hover{ filter:brightness(1.06); }
+    .btn-soft:hover{ background:var(--accent); color:#fff; }
+    .chip:hover{ border-color:var(--accent); }
+    .nav-btn:hover{ color:var(--accent-d); }
+    .card:hover{ box-shadow:0 14px 32px var(--shadow-rose), inset 0 1px 0 rgba(255,255,255,.85); }
+    .card-heart-border:hover{ transform:translateY(-2px); }
+    .polaroid:hover{ transform:rotate(0) scale(1.03); }
+    a[target]:hover{ transform:translateY(-2px); }
+  }
+  /* Barre de nav en mode « bureau » : libellés lisibles + disposition compacte */
+  @media (min-width:768px){
+    nav .nav-btn{ flex:0 0 auto; padding:6px 14px; border-radius:14px; }
+    nav .nav-btn span:not(.nav-dot){ font-size:11px; }
+    nav .nav-btn i{ width:20px; height:20px; }
+    nav .nav-btn.active{ background:var(--shadow-rose); transform:translateY(0) scale(1.03); }
+    nav .nav-dot{ display:none; }
+  }
+
   /* Respect des personnes qui réduisent les animations */
   @media (prefers-reduced-motion: reduce){
     #deco span, .heartbeat, .holo, .sparkle{ animation:none !important; }
@@ -230,12 +250,12 @@
 </header>
 
 <!-- ================= CONTENU ================= -->
-<main id="app" class="px-4 pb-28 pt-1 max-w-md mx-auto"></main>
+<main id="app" class="px-4 pb-28 md:pb-32 pt-1 max-w-md md:max-w-3xl lg:max-w-5xl mx-auto"></main>
 
 <!-- ================= NAV DU BAS ================= -->
-<nav class="fixed bottom-0 left-0 right-0 z-40 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]"
+<nav class="fixed bottom-0 left-0 right-0 z-40 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] md:left-1/2 md:-translate-x-1/2 md:right-auto md:w-auto md:bottom-4 md:!rounded-full md:px-3 md:pb-2 md:border-2 md:border-[#FFE0EF]"
      style="background:rgba(255,255,255,.85); backdrop-filter:blur(14px); border-top:2px solid #FFE0EF; border-radius:1.5rem 1.5rem 0 0; box-shadow:0 -6px 20px var(--shadow-rose);">
-  <div class="flex justify-between max-w-md mx-auto">
+  <div class="flex justify-between md:justify-center gap-1 md:gap-2 max-w-md md:max-w-none mx-auto">
     <button class="nav-btn flex flex-col items-center gap-0.5 flex-1 py-1" data-tab="studio" onclick="switchTab('studio')">
       <i data-lucide="palette" class="w-5 h-5"></i><span class="text-[9px] font-semibold">Studio</span>
       <span class="nav-dot w-1 h-1 rounded-full bg-current"></span>
@@ -269,7 +289,7 @@
 
 <!-- ================= MODALE GÉNÉRIQUE ================= -->
 <div id="modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center p-3" style="background:rgba(200,120,160,.35); backdrop-filter:blur(4px);">
-  <div id="modal-box" class="card w-full max-w-md max-h-[88vh] overflow-y-auto no-scrollbar p-5 view-enter"></div>
+  <div id="modal-box" class="card w-full max-w-md md:max-w-lg max-h-[88vh] overflow-y-auto no-scrollbar p-5 view-enter"></div>
 </div>
 
 <!-- ================= ÉCRAN DE CONNEXION ================= -->
@@ -547,7 +567,7 @@ function nailSVG(color, forme, longueur, finish, idx){
   const lenMap = { 'Courte':70,'Moyenne':95,'Longue':120,'XL':145 };
   const H = lenMap[longueur]||95;
   const W = 46;
-  const gid = 'g'+idx+'_'+Math.random().toString(36).slice(2,6);
+  const gid = 'g'+idx;   // id stable (plus de régénération à chaque rendu)
   // Chemin de l'ongle selon la forme (tip)
   let tip;
   switch(forme){
@@ -565,7 +585,10 @@ function nailSVG(color, forme, longueur, finish, idx){
   if(finish==='glossy'){
     overlay = `<path d="${path}" fill="url(#${gid}gloss)" class="nail-gloss"/>`;
   } else if(finish==='glitter'){
-    let dots=''; for(let i=0;i<14;i++){ dots+=`<circle cx="${6+Math.random()*(W-12)}" cy="${H*0.25+Math.random()*(H*0.7)}" r="${.8+Math.random()*1.4}" fill="#fff" opacity="${.5+Math.random()*.5}"/>`; }
+    // positions DÉTERMINISTES (seed = idx) : les paillettes ne sautillent plus à chaque rendu
+    let dots=''; let s = idx*9301 + 49297;
+    const rnd = ()=>{ s = (s*9301 + 49297) % 233280; return s/233280; };
+    for(let i=0;i<14;i++){ dots+=`<circle cx="${(6+rnd()*(W-12)).toFixed(1)}" cy="${(H*0.25+rnd()*(H*0.7)).toFixed(1)}" r="${(.8+rnd()*1.4).toFixed(2)}" fill="#fff" opacity="${(.5+rnd()*.5).toFixed(2)}"/>`; }
     overlay = dots;
   } // mat = pas d'overlay brillant
 
@@ -605,6 +628,8 @@ function renderStudio(){
     </div>`;
 
   app.innerHTML = `
+    <div class="md:grid md:grid-cols-2 md:gap-5 md:items-start">
+    <div>
     <!-- Visualiseur de main -->
     <div class="card p-4 mb-4 relative overflow-hidden">
       <div class="sparkle" style="top:8px;right:14px">✨</div>
@@ -613,7 +638,7 @@ function renderStudio(){
         <h2 class="font-cute font-bold text-lg" style="color:var(--accent-d)">Ta main 🖐️</h2>
         <span class="badge-pastel">${p.mainNonDom?'Main non-dominante':'Main dominante'}</span>
       </div>
-      <div class="flex justify-center items-end gap-1 px-2">${nailsHtml}</div>
+      <div class="flex justify-center items-end gap-1 px-2 md:max-w-sm md:mx-auto">${nailsHtml}</div>
       <p class="text-center text-[11px] mt-2" style="color:var(--accent)">👆 Touche un ongle pour changer sa couleur</p>
 
       <!-- Toggle finition -->
@@ -627,6 +652,8 @@ function renderStudio(){
       </label>
     </div>
 
+    </div>
+    <div>
     <!-- Filtres de pose -->
     <div class="card p-4 mb-4">
       <h3 class="font-cute font-bold mb-3" style="color:var(--accent-d)">🎨 Compose ta pose</h3>
@@ -642,7 +669,7 @@ function renderStudio(){
       ${DB.gels.length? `<div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
           ${DB.gels.map(g=>`<button onclick="applyGelToSelected('${g.hex||'#FF7EB9'}')" class="flex flex-col items-center flex-shrink-0">
             <span class="w-9 h-9 rounded-full border-2 border-white shadow" style="background:${g.hex||'#FF7EB9'}"></span>
-            <span class="text-[8px] mt-0.5 max-w-[54px] truncate">${g.brand}</span></button>`).join('')}
+            <span class="text-[8px] mt-0.5 max-w-[54px] truncate">${esc(g.brand)}</span></button>`).join('')}
         </div>` : `<p class="text-xs text-gray-400">Ajoute des gels dans l'onglet Stock ✨</p>`}
       <div class="mt-2 text-[11px] text-gray-400">Ongle sélectionné : <b id="sel-nail-label" style="color:var(--accent-d)">${FINGERS[selectedNail]}</b></div>
     </div>
@@ -657,6 +684,8 @@ function renderStudio(){
       </button>
     </div>
     <div id="texture-alert" class="text-center text-xs"></div>
+    </div>
+    </div>
   `;
   checkTextureCompat();
 }
@@ -744,13 +773,13 @@ function renderGels(){
       <span class="text-lg">💔</span> ${alerts} gel(s) ouverts depuis longtemps, pense à vérifier leur texture !</div>`:''}
     <button onclick="gelForm()" class="btn-primary w-full py-3 mb-4 flex items-center justify-center gap-2">
       <i data-lucide="plus" class="w-4 h-4"></i> Ajouter un gel UV</button>
-    ${DB.gels.length? DB.gels.map(gelCard).join('') : emptyState('💅','Aucun gel pour l\'instant','Ajoute ta première couleur adorée !')}
+    ${DB.gels.length? `<div class="grid gap-3 md:grid-cols-2 lg:grid-cols-3">${DB.gels.map(gelCard).join('')}</div>` : emptyState('💅','Aucun gel pour l\'instant','Ajoute ta première couleur adorée !')}
   `;
   lucide.createIcons();
 }
 function gelCard(g){
   const per = peremptionInfo(g);
-  return `<div class="card p-3 mb-3 flex items-center gap-3">
+  return `<div class="card p-3 flex items-center gap-3">
     <span class="w-14 h-14 rounded-2xl border-2 border-white shadow flex-shrink-0" style="background:${g.hex||'#eee'}"></span>
     <div class="flex-1 min-w-0">
       <div class="font-cute font-bold truncate" style="color:var(--accent-d)">${esc(g.brand)} ${esc(g.ref||'')}</div>
@@ -834,8 +863,10 @@ function saveGel(id){
     finish: document.getElementById('gf-finish').value,
     openDate: document.getElementById('gf-date').value
   };
-  if(id){ const i=DB.gels.findIndex(x=>x.id===id); DB.gels[i]=gel; } else DB.gels.push(gel);
-  if(!save()) return;   // si la mémoire est pleine, on n'affiche pas un faux « enregistré »
+  let rollback;
+  if(id){ const i=DB.gels.findIndex(x=>x.id===id); const prev=DB.gels[i]; DB.gels[i]=gel; rollback=()=>{ DB.gels[i]=prev; }; }
+  else { DB.gels.push(gel); rollback=()=>{ DB.gels.pop(); }; }
+  if(!save()){ rollback(); return; }   // mémoire pleine → on annule la modif (pas de fantôme)
   closeModal(); pinkConfetti(); toast('💅 Gel enregistré !'); renderStock();
 }
 function delGel(id){ if(confirm('Supprimer ce gel ?')){ DB.gels=DB.gels.filter(g=>g.id!==id); save(); renderStock(); } }
@@ -847,14 +878,14 @@ function renderDecors(){
   const toolLabels = { ponceuse:'Ponceuse',lampeUV:'Lampe UV',lampeLED:'Lampe LED',pinceauLiner:'Pinceau liner',aimantCatEye:'Aimant Cat Eye',pousseCuticules:'Pousse-cuticules',dustBrush:'Dust brush',limes:'Limes' };
   body.innerHTML = `
     <button onclick="decorForm()" class="btn-primary w-full py-3 mb-4 flex items-center justify-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Ajouter un décor</button>
-    <div class="grid grid-cols-2 gap-3 mb-5">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-5">
       ${DB.decors.length? DB.decors.map(d=>`
         <div class="card p-3 relative">
           <button onclick="delDecor('${d.id}')" class="absolute top-2 right-2 text-red-300"><i data-lucide="x" class="w-4 h-4"></i></button>
           <div class="text-2xl">${({'Strass':'💎','Paillettes':'✨','Poudre chromée':'🪞','Foils':'🌈','Gel 3D':'🧁','Stickers':'🎀'})[d.type]||'💖'}</div>
           <div class="font-cute font-bold text-sm mt-1" style="color:var(--accent-d)">${esc(d.name)}</div>
           <span class="badge-pastel mt-1 inline-block">${d.type}${d.qty?' · '+esc(d.qty):''}</span>
-        </div>`).join('') : `<div class="col-span-2">${emptyState('✨','Aucun décor','Strass, paillettes, foils…')}</div>`}
+        </div>`).join('') : `<div class="col-span-full">${emptyState('✨','Aucun décor','Strass, paillettes, foils…')}</div>`}
     </div>
     <div class="card p-4">
       <h3 class="font-cute font-bold mb-3" style="color:var(--accent-d)">🧰 Mes outils possédés</h3>
@@ -885,7 +916,7 @@ function decorForm(){
 function saveDecor(){
   const name = document.getElementById('df-name').value.trim(); if(!name) return toast('Donne un nom 💕');
   DB.decors.push({ id:uid(), name, type:document.getElementById('df-type').value, qty:document.getElementById('df-qty').value.trim() });
-  if(!save()) return;
+  if(!save()){ DB.decors.pop(); return; }
   closeModal(); pinkConfetti(); renderStock();
 }
 function delDecor(id){ DB.decors=DB.decors.filter(d=>d.id!==id); save(); renderStock(); }
@@ -931,7 +962,7 @@ function renderScan(){
     </div>
     <div id="scan-result"></div>
     <h3 class="font-cute font-bold mt-5 mb-2" style="color:#c94fe0">💾 Mes inspirations sauvées</h3>
-    <div id="scan-saved" class="grid grid-cols-2 gap-3"></div>
+    <div id="scan-saved" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
   `;
   renderSavedInspi();
   lucide.createIcons();
@@ -983,7 +1014,7 @@ function saveInspi(){
   if(!lastScan) return;
   const { data, style } = lastScan;
   DB.inspirations.unshift({ id:uid(), img:data.img||null, url:data.url||null, palette:data.palette, style, date:new Date().toISOString() });
-  if(!save()) return;   // mémoire pleine → pas de faux « sauvé »
+  if(!save()){ DB.inspirations.shift(); return; }   // mémoire pleine → on annule
   toast('💾 Inspiration sauvée !'); renderSavedInspi();
 }
 function renderSavedInspi(){
@@ -993,7 +1024,7 @@ function renderSavedInspi(){
       <button onclick="delInspi('${i.id}')" class="absolute top-1 right-1 bg-white/80 rounded-full p-0.5 text-red-400 z-10"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
       ${i.img?`<img src="${i.img}" class="w-full h-24 object-cover rounded-xl mb-1">`:`<div class="w-full h-24 rounded-xl mb-1 flex gap-0.5 overflow-hidden">${i.palette.map(h=>`<div class="flex-1" style="background:${h}"></div>`).join('')}</div>`}
       <span class="badge-pastel text-[9px]">${i.style}</span>
-    </div>`).join('') : `<div class="col-span-2">${emptyState('🔮','Aucune inspi sauvée','Analyse ta première capture !')}</div>`;
+    </div>`).join('') : `<div class="col-span-full">${emptyState('🔮','Aucune inspi sauvée','Analyse ta première capture !')}</div>`;
   lucide.createIcons();
 }
 function delInspi(id){ DB.inspirations=DB.inspirations.filter(x=>x.id!==id); save(); renderSavedInspi(); }
@@ -1022,8 +1053,8 @@ function renderCarnet(){
   app.innerHTML = `
     ${nextFill}
     <button onclick="carnetForm()" class="btn-primary w-full py-3 mb-4 flex items-center justify-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Nouvelle fiche souvenir</button>
-    <div class="grid grid-cols-2 gap-3">
-      ${DB.carnet.length? [...DB.carnet].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(carnetCard).join('') : `<div class="col-span-2">${emptyState('📔','Ton carnet est vide','Immortalise ta première pose 💖')}</div>`}
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+      ${DB.carnet.length? [...DB.carnet].sort((a,b)=>parseLocal(b.date)-parseLocal(a.date)).map(carnetCard).join('') : `<div class="col-span-full">${emptyState('📔','Ton carnet est vide','Immortalise ta première pose 💖')}</div>`}
     </div>`;
   lucide.createIcons();
 }
@@ -1083,7 +1114,7 @@ function saveCarnet(){
     rating:carnetStars, wear:document.getElementById('cf-wear').value,
     palette:[...DB.pose.nails]
   });
-  if(!save()){ return; }   // mémoire pleine → pas de faux « enregistré »
+  if(!save()){ DB.carnet.pop(); return; }   // mémoire pleine → on annule (pas de faux « enregistré »)
   closeModal(); pinkConfetti(); heartBurst(); carnetStars=0; toast('📔 Souvenir enregistré !'); renderCarnet();
 }
 function delCarnet(id){ if(confirm('Supprimer cette fiche ?')){ DB.carnet=DB.carnet.filter(c=>c.id!==id); save(); renderCarnet(); } }
@@ -1213,8 +1244,11 @@ function renderTuto(){
   `;
   lucide.createIcons();
 }
+let audioCtx = null;
 function startTimer(sec, lowHeat=false){
   stopTimer();
+  // On prépare le son ICI (déclenché par un vrai clic) pour éviter le blocage autoplay
+  try{ audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume(); }catch(e){}
   timerTotal = timerLeft = sec;
   const heart = document.getElementById('timer-heart');
   heart.classList.add('heartbeat');
@@ -1243,7 +1277,8 @@ function finishTimer(){
 // Signal sonore doux généré (pas de fichier externe)
 function playChime(){
   try{
-    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const ctx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    if(ctx.state==='suspended'){ try{ ctx.resume(); }catch(e){} }
     [880,1108,1318].forEach((f,i)=>{
       const o=ctx.createOscillator(), g=ctx.createGain();
       o.type='sine'; o.frequency.value=f;
@@ -1281,7 +1316,7 @@ function renderPlans(){
     ${Object.entries(SHOPS).map(([cat,shops])=>`
       <div class="card p-4 mb-4">
         <h3 class="font-cute font-bold mb-3 flex items-center gap-2" style="color:var(--accent-d)">🎀 ${cat}</h3>
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
           ${shops.map(s=>`<a href="${s.url}" target="_blank" rel="noopener" class="card-heart-border bg-white/70 rounded-2xl p-3 flex items-center gap-2 text-sm">
             <span class="text-xl">${s.emoji}</span>
             <span class="font-semibold" style="color:var(--accent-d)">${s.name}</span>
@@ -1295,7 +1330,7 @@ function renderPlans(){
         <h3 class="font-cute font-bold flex items-center gap-2" style="color:var(--accent-d)">🎁 Mes codes promo</h3>
         <button onclick="promoForm()" class="btn-primary px-3 py-1.5 text-xs flex items-center gap-1"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Ajouter</button>
       </div>
-      ${DB.promos.length? DB.promos.map(promoCard).join('') : emptyState('🎀','Aucun code pour l\'instant','Ajoute les codes trouvés sur TikTok/Insta !')}
+      ${DB.promos.length? `<div class="md:grid md:grid-cols-2 md:gap-2">${DB.promos.map(promoCard).join('')}</div>` : emptyState('🎀','Aucun code pour l\'instant','Ajoute les codes trouvés sur TikTok/Insta !')}
     </div>
   `;
   lucide.createIcons();
@@ -1341,7 +1376,7 @@ function savePromo(){
   const shop=document.getElementById('pf-shop').value.trim(), code=document.getElementById('pf-code').value.trim();
   if(!shop||!code) return toast('Remplis boutique + code 💕');
   DB.promos.push({ id:uid(), shop, code, discount:document.getElementById('pf-disc').value.trim() });
-  if(!save()) return;
+  if(!save()){ DB.promos.pop(); return; }
   closeModal(); pinkConfetti(); renderPlans();
 }
 function delPromo(id){ DB.promos=DB.promos.filter(p=>p.id!==id); save(); renderPlans(); }
@@ -1360,22 +1395,33 @@ function emptyState(emoji,title,sub){
 /* ================================================================
    WAKE LOCK (Mode Écran Actif)
    ================================================================ */
-let wakeLock = null;
-async function toggleWakeLock(){
-  const label = document.getElementById('wakelock-label');
-  if(wakeLock){ try{ await wakeLock.release(); }catch(e){} wakeLock=null; label.textContent='Veille'; toast('😴 Écran libre'); return; }
-  if(!('wakeLock' in navigator)) return toast('❌ Non supporté sur ce navigateur');
+let wakeLock = null, wakeLockWanted = false;   // wakeLockWanted = intention de l'utilisatrice
+async function acquireWakeLock(){
+  if(!('wakeLock' in navigator)) return false;
   try{
     wakeLock = await navigator.wakeLock.request('screen');
-    label.textContent='Actif ✨'; toast('☀️ Écran maintenu allumé pour ta séance !');
-    wakeLock.addEventListener('release', ()=>{ label.textContent='Veille'; });
-  }catch(e){ toast('❌ Impossible d\'activer'); }
+    wakeLock.addEventListener('release', ()=>{        // libération auto (écran éteint, onglet caché)
+      wakeLock = null;
+      const l = document.getElementById('wakelock-label'); if(l) l.textContent = wakeLockWanted ? 'Actif ✨' : 'Veille';
+    });
+    return true;
+  }catch(e){ return false; }
 }
-// Réactive le wake lock si l'onglet redevient visible
-document.addEventListener('visibilitychange', async ()=>{
-  if(wakeLock!==null && document.visibilityState==='visible'){
-    try{ wakeLock = await navigator.wakeLock.request('screen'); }catch(e){}
+async function toggleWakeLock(){
+  const label = document.getElementById('wakelock-label');
+  if(wakeLockWanted){                                  // on éteint
+    wakeLockWanted = false;
+    try{ if(wakeLock) await wakeLock.release(); }catch(e){}
+    wakeLock = null; label.textContent='Veille'; toast('😴 Écran libre'); return;
   }
+  if(!('wakeLock' in navigator)) return toast('❌ Non supporté sur ce navigateur');
+  wakeLockWanted = true;
+  if(await acquireWakeLock()){ label.textContent='Actif ✨'; toast('☀️ Écran maintenu allumé pour ta séance !'); }
+  else { wakeLockWanted = false; toast('❌ Impossible d\'activer'); }
+}
+// Réacquiert le verrou au retour de l'onglet si l'utilisatrice le veut toujours
+document.addEventListener('visibilitychange', ()=>{
+  if(wakeLockWanted && wakeLock===null && document.visibilityState==='visible'){ acquireWakeLock(); }
 });
 
 /* ================================================================
@@ -1458,6 +1504,8 @@ function mergeRemoteIntoLocal(remote){
     (DB[k]||[]).forEach(x=> x && x.id && map.set(x.id, x)); // en cas de même id, la version locale gagne
     merged[k] = [...map.values()];
   });
+  // Objets non-liste : on garde les valeurs LOCALES (elles sont en attente de synchro).
+  ['tools','gelx','settings','pose'].forEach(k=>{ merged[k] = Object.assign({}, remote[k]||{}, DB[k]||{}); });
   merged._localTs = Date.now();
   DB = merged;
   save(true);
@@ -1543,8 +1591,11 @@ window.addEventListener('DOMContentLoaded', async ()=>{
       } else {
         showLogin();                     // jamais connectée sur cet appareil
       }
-      // Écoute les changements d'auth (rafraîchissement de jeton, etc.)
-      sb.auth.onAuthStateChange((_e, session)=>{ cloudUser = session ? session.user : null; });
+      // Écoute les changements d'auth (rafraîchissement de jeton, déconnexion ailleurs…)
+      sb.auth.onAuthStateChange((ev, session)=>{
+        cloudUser = session ? session.user : null;
+        if(ev === 'SIGNED_OUT'){ setSync('off'); showLogin(); }   // déconnectée (ici ou autre onglet)
+      });
     }catch(e){ showLogin(); }
   } else {
     // Librairie cloud indisponible : l'appli reste utilisable en local seul.
