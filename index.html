@@ -12,7 +12,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Nail Studio">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23FF7EB9'/%3E%3Ctext x='50' y='68' font-size='60' text-anchor='middle'%3E%F0%9F%92%85%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%85%3C/text%3E%3C/svg%3E">
 
 <!-- ===== Librairies CDN ===== -->
@@ -846,6 +847,17 @@ function renderStudio(){
         ${filterGroup('Style','style')}
       </div>
     </div>
+
+    <!-- INSPIRATIONS (Pinterest / TikTok selon la pose choisie) -->
+    <div class="card p-4 mb-2">
+      <h3 class="font-cute font-bold" style="color:var(--accent-d)">📌 Inspirations pour cette pose</h3>
+      <p class="text-[11px] mb-3" style="color:var(--accent)">De vrais exemples de « <b>${p.style}</b> · ${p.forme} · ${p.longueur} · ${p.technique} »</p>
+      <div class="grid grid-cols-2 gap-2">
+        <a href="${pinterestUrl()}" target="_blank" rel="noopener" class="btn-primary py-3.5 flex items-center justify-center gap-2 text-sm">📌 Pinterest</a>
+        <a href="${tiktokUrl()}" target="_blank" rel="noopener" class="btn-soft py-3.5 flex items-center justify-center gap-2 text-sm">🎵 TikTok</a>
+      </div>
+      <a href="${googleImgUrl()}" target="_blank" rel="noopener" class="block text-center text-[11px] mt-3" style="color:var(--accent)">🔎 ou voir en images (Google)</a>
+    </div>
   `;
   paintAllHands();      // recolore les vrais ongles de la photo
   checkTextureCompat();
@@ -867,6 +879,16 @@ function toggleNonDom(v){
   }
   save(); renderTab();
 }
+// Construit une recherche d'inspiration à partir de la pose choisie
+function poseQuery(){
+  const p = DB.pose;
+  return [p.style, String(p.forme).replace('/',' '), String(p.longueur).toLowerCase(), 'ongles nail art']
+    .join(' ').replace(/\s+/g,' ').trim();
+}
+function pinterestUrl(){ return 'https://www.pinterest.com/search/pins/?q=' + encodeURIComponent(poseQuery()); }
+function tiktokUrl(){ return 'https://www.tiktok.com/search?q=' + encodeURIComponent(poseQuery()); }
+function googleImgUrl(){ return 'https://www.google.com/search?tbm=isch&q=' + encodeURIComponent(poseQuery()); }
+
 function pickNailColor(i){
   selectedNail = i;
   const lbl = document.getElementById('sel-nail-label'); if(lbl) lbl.textContent = FINGERS[i];
@@ -1365,6 +1387,12 @@ const BIT_ART = {
   'Flamme':`<svg viewBox="0 0 64 66"><rect x="28.5" y="42" width="7" height="22" rx="3" fill="#c2c2cc"/><rect x="30.5" y="42" width="2" height="22" fill="#e9e9f0"/><path d="M32 5 Q47 24 40 40 Q36 48 32 48 Q28 48 24 40 Q17 24 32 5 Z" fill="#cccdd8" stroke="#9a9aa6" stroke-width="1.3"/><path d="M31 12 Q40 24 35 36" fill="none" stroke="#fff" stroke-width="2.5" opacity=".45"/></svg>`,
   'Meule silicone':`<svg viewBox="0 0 64 66"><rect x="28.5" y="46" width="7" height="18" rx="3" fill="#c2c2cc"/><rect x="30.5" y="46" width="2" height="18" fill="#e9e9f0"/><path d="M18 46 L18 26 Q18 8 32 8 Q46 8 46 26 L46 46 Z" fill="#f3a6c4" stroke="#d67aa0" stroke-width="1.3"/><path d="M24 42 L24 26 Q24 16 32 15" fill="none" stroke="#fff" stroke-width="3" opacity=".5"/></svg>`,
   'Limes 100/180/240':`<svg viewBox="0 0 64 66"><g transform="rotate(-28 32 33)"><rect x="24" y="5" width="16" height="50" rx="7" fill="#eab7c6" stroke="#c98b9d" stroke-width="1.3"/><rect x="26" y="46" width="12" height="9" rx="3" fill="#d9d9e0" stroke="#b6b6c0" stroke-width="1"/><g fill="#b56d82" opacity=".45"><circle cx="30" cy="14" r="1.1"/><circle cx="35" cy="18" r="1.1"/><circle cx="29" cy="22" r="1.1"/><circle cx="34" cy="27" r="1.1"/><circle cx="30" cy="32" r="1.1"/><circle cx="35" cy="37" r="1.1"/></g></g></svg>`,
+  'Bague abrasive':`<svg viewBox="0 0 64 66"><rect x="28.5" y="46" width="7" height="18" rx="3" fill="#c2c2cc"/><rect x="30.5" y="46" width="2" height="18" fill="#e9e9f0"/><rect x="20" y="10" width="24" height="38" rx="3" fill="#c98a5f" stroke="#9a5f45" stroke-width="1.3"/><g fill="#8a5030" opacity=".5"><circle cx="25" cy="16" r="1"/><circle cx="33" cy="19" r="1"/><circle cx="40" cy="15" r="1"/><circle cx="28" cy="26" r="1"/><circle cx="37" cy="29" r="1"/><circle cx="24" cy="34" r="1"/><circle cx="41" cy="38" r="1"/><circle cx="31" cy="40" r="1"/></g><rect x="20" y="42" width="24" height="5" fill="#7a4028"/></svg>`,
+  'Ballon rugby':`<svg viewBox="0 0 64 66"><rect x="28.5" y="44" width="7" height="20" rx="3" fill="#c2c2cc"/><rect x="30.5" y="44" width="2" height="20" fill="#e9e9f0"/><path d="M32 6 Q47 26 32 46 Q17 26 32 6 Z" fill="#cccdd8" stroke="#9a9aa6" stroke-width="1.3"/><path d="M32 10 Q40 26 32 42" fill="none" stroke="#fff" stroke-width="2" opacity=".4"/></svg>`,
+  'Aiguille':`<svg viewBox="0 0 64 66"><rect x="28.5" y="44" width="7" height="20" rx="3" fill="#c2c2cc"/><rect x="30.5" y="44" width="2" height="20" fill="#e9e9f0"/><path d="M32 4 L36 46 L28 46 Z" fill="#cccdd8" stroke="#9a9aa6" stroke-width="1.2"/><path d="M32 4 L33.5 30 L30.5 30 Z" fill="#fff" opacity=".45"/></svg>`,
+  'Bit sécurité':`<svg viewBox="0 0 64 66"><rect x="28.5" y="46" width="7" height="18" rx="3" fill="#c2c2cc"/><rect x="30.5" y="46" width="2" height="18" fill="#e9e9f0"/><path d="M20 46 L20 20 Q20 8 32 8 Q44 8 44 20 L44 46 Z" fill="#e6c8b0" stroke="#c19a80" stroke-width="1.3"/><rect x="20" y="42" width="24" height="5" fill="#c19a80" opacity=".5"/><circle cx="26" cy="16" r="3" fill="#fff" opacity=".4"/></svg>`,
+  'Roue / disque':`<svg viewBox="0 0 64 66"><rect x="28.5" y="40" width="7" height="24" rx="3" fill="#c2c2cc"/><rect x="30.5" y="40" width="2" height="24" fill="#e9e9f0"/><ellipse cx="32" cy="24" rx="20" ry="7" fill="#b9b9c6" stroke="#9a9aa6" stroke-width="1.2"/><ellipse cx="32" cy="21" rx="20" ry="7" fill="#dcdce6" stroke="#9a9aa6" stroke-width="1.2"/></svg>`,
+  'Cône inversé':`<svg viewBox="0 0 64 66"><rect x="28.5" y="46" width="7" height="18" rx="3" fill="#c2c2cc"/><rect x="30.5" y="46" width="2" height="18" fill="#e9e9f0"/><path d="M18 8 L46 8 L36 46 L28 46 Z" fill="#e8d5b5" stroke="#c0a878" stroke-width="1.3"/><g stroke="#b09860" stroke-width="1" opacity=".4"><line x1="22" y1="16" x2="42" y2="16"/><line x1="24" y1="26" x2="40" y2="26"/><line x1="26" y1="36" x2="38" y2="36"/></g></svg>`,
 };
 const PONCEUSE_BITS = {
   'Cône fin':{steps:['Sert aux cuticules et aux contours','Vitesse BASSE, angle ~45°','Effleure sans appuyer, jamais sur la peau']},
@@ -1373,6 +1401,12 @@ const PONCEUSE_BITS = {
   'Flamme':{steps:['Nettoie le repli latéral de l\'ongle','Longe le sillon sans toucher la peau','Vitesse basse']},
   'Meule silicone':{steps:['Polit et lisse la surface','Prépare avant le top coat','Donne un fini satiné']},
   'Limes 100/180/240':{steps:['100 : dessus & forme (gros grain)','180 : affiner la forme','240 : lisser la surface en douceur']},
+  'Bague abrasive':{steps:['Manchon jetable qui se glisse sur un mandrin','Dépose du gel/acrylique et dégrossissage','On change la bague quand elle est usée (hygiène)']},
+  'Ballon rugby':{steps:['Forme olive : idéal sous les cuticules et les côtés','Suit la courbe naturelle de l\'ongle','Pression légère, vitesse moyenne']},
+  'Aiguille':{steps:['Pointe très fine : petits détails et coins','Nettoie le repli latéral au plus près','Vitesse basse, TRÈS délicat près de la peau']},
+  'Bit sécurité':{steps:['Bout arrondi non coupant : ne blesse pas la peau','Parfait pour débuter ou sous l\'ongle','Passe le long des cuticules sans risque']},
+  'Roue / disque':{steps:['Raccourcit le bord libre rapidement','Tenir bien à plat, effleurer le bout','Fait de la poussière : masque conseillé']},
+  'Cône inversé':{steps:['Nettoie SOUS le bord libre (envers de l\'ongle)','Affine le dessous de la capsule/rallonge','Vitesse basse, petits passages']},
 };
 function showPonceuse(k){
   const t=PONCEUSE_BITS[k]; if(!t) return;
@@ -1799,6 +1833,7 @@ function renderDeco(){
 window.addEventListener('DOMContentLoaded', async ()=>{
   lucide.createIcons();
   renderDeco();                        // décor de fond
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }  // app installable + hors-ligne
   initHand();                          // charge la vraie main (photo) + repère les ongles
   switchTab('studio');                 // rend l'appli tout de suite (cache local)
   setSync('off');

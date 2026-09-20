@@ -1,0 +1,17 @@
+{
+  "name": "Mon Atelier Nail Art",
+  "short_name": "Nail Studio",
+  "description": "Ton atelier de nail art : studio, stock, chrono UV, carnet et inspirations.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FFF5F8",
+  "theme_color": "#FF7EB9",
+  "lang": "fr",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
